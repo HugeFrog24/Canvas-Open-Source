@@ -44,30 +44,35 @@ void file_selector_cb(int fd) {
     }
 }
 
-void iAmHookable() {
-    ImGui::Text("Hello, I am not hooked yet!");
-}
-static void (*iAmCallback)();
-PRIVATE_API void iAmHook() {
-    ImGui::Text("Hello, I'm the hook!");
-    iAmCallback();
-}
-static CipherBase *hook = NULL;
+
 PRIVATE_API void SystemsTest() {
     ImGui::Begin("System Tests");
 
     ImGui::Text("is Game Beta? %s", Cipher::isGameBeta() ? "true" : "false");
     ImGui::Text("is Game Beta? %s", CipherUtils::get_GameType() == GameType::Beta ? "true" : "false");
-    iAmHookable();
-    if(ImGui::Button("Hook")) {
-        if(hook != NULL) hook->Restore();
-        delete hook;
-        hook = (new CipherHook())
-            ->set_Hook((uintptr_t)iAmHook)
-            ->set_Callback((uintptr_t)&iAmCallback)
-            ->set_Address((uintptr_t)iAmHookable, false)
-            ->Fire();
+
+    if (ImGui::Button("haptic success")) {
+        CipherUtils::performHapticFeedback(HapticFeedbackType::TYPE_SUCCESS);
     }
+    if (ImGui::Button("haptic success strong")) {
+        CipherUtils::performHapticFeedback(HapticFeedbackType::TYPE_SUCCESS_STRONG);
+    }
+    if (ImGui::Button("haptic warning")) {
+        CipherUtils::performHapticFeedback(HapticFeedbackType::TYPE_WARNING);
+    }
+    if (ImGui::Button("haptic error")) {
+        CipherUtils::performHapticFeedback(HapticFeedbackType::TYPE_ERROR);
+    }
+    if (ImGui::Button("haptic selection")) {
+        CipherUtils::performHapticFeedback(HapticFeedbackType::TYPE_SELECTION);
+    }
+    if (ImGui::Button("haptic impact light")) {
+        CipherUtils::performHapticFeedback(HapticFeedbackType::TYPE_IMPACT_LIGHT);
+    }
+    if (ImGui::Button("haptic impact")) {
+        CipherUtils::performHapticFeedback(HapticFeedbackType::TYPE_IMPACT);
+    }
+    
     ImGui::End();
 
 }
@@ -85,6 +90,7 @@ PRIVATE_API static void HelpMarker(const char* desc)
 }
 
 PRIVATE_API void DrawMods() {
+    // SystemsTest();
     for (auto &userLib: Canvas::userLibs) {
         if (userLib.UIEnabled) {
             if (userLib.UISelfManaged) {
@@ -327,4 +333,14 @@ Java_git_artdeell_skymodloader_MainActivity_customServer(JNIEnv *env, jclass cla
     uintptr_t ssl = (new CipherUtils())->CipherScan("\x00\x00\x00\x52\xE2\x03\x1F\xAA\x00\x00\x00\x94\x00\x00\x00\xF9\x00\x00\x00\x52", "???xxxxx???x???x???x");
     LOGD("scanner %p", ssl);
    // (new CipherPatch())->set_Opcode("01008052")->set_Address(ssl, false)->Fire();
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_git_artdeell_skymodloader_MainActivity_getSysetemUI(
+        JNIEnv *env,
+        jclass clazz,
+        jobject systemUI
+) {
+    Canvas::systemUI = env->NewGlobalRef(systemUI);
 }

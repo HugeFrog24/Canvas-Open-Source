@@ -32,7 +32,7 @@ import java.nio.charset.StandardCharsets;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class PSN implements SystemAccountInterface {
+public class Sony implements SystemAccountInterface {
     volatile boolean dialogCancelled;
     String loginUrl;
     public SystemAccountClientInfo m_accountClientInfo;
@@ -47,7 +47,7 @@ public class PSN implements SystemAccountInterface {
         this.m_callback = updateClientInfoCallback;
         SystemAccountClientInfo systemAccountClientInfo = new SystemAccountClientInfo();
         this.m_accountClientInfo = systemAccountClientInfo;
-        systemAccountClientInfo.accountType = SystemAccountType.kSystemAccountType_PSN;
+        systemAccountClientInfo.accountType = SystemAccountType.kSystemAccountType_Sony;
         this.m_accountClientInfo.state = SystemAccountClientState.kSystemAccountClientState_SignedOut;
         this.m_accountClientInfo.requestState = SystemAccountClientRequestState.kSystemAccountClientRequestState_Idle;
         this.m_callback.UpdateClientInfo(this.m_accountClientInfo);
@@ -64,8 +64,8 @@ public class PSN implements SystemAccountInterface {
         this.m_accountClientInfo.state = SystemAccountClientState.kSystemAccountClientState_SigningIn;
         this.m_activity.runOnUiThread(new Runnable() {
             public void run() {
-                PSN.this.m_callback.UpdateClientInfo(PSN.this.m_accountClientInfo);
-                PSN.this.StartFlow();
+                Sony.this.m_callback.UpdateClientInfo(Sony.this.m_accountClientInfo);
+                Sony.this.StartFlow();
             }
         });
     }
@@ -74,11 +74,11 @@ public class PSN implements SystemAccountInterface {
         this.m_accountClientInfo.state = SystemAccountClientState.kSystemAccountClientState_SigningOut;
         this.m_activity.runOnUiThread(new Runnable() {
             public void run() {
-                PSN.this.m_callback.UpdateClientInfo(PSN.this.m_accountClientInfo);
+                Sony.this.m_callback.UpdateClientInfo(Sony.this.m_accountClientInfo);
                 CookieManager.getInstance().removeAllCookies(new ValueCallback<Boolean>() {
                     public void onReceiveValue(Boolean bool) {
-                        PSN.this.m_accountClientInfo.state = SystemAccountClientState.kSystemAccountClientState_SignedOut;
-                        PSN.this.m_callback.UpdateClientInfo(PSN.this.m_accountClientInfo);
+                        Sony.this.m_accountClientInfo.state = SystemAccountClientState.kSystemAccountClientState_SignedOut;
+                        Sony.this.m_callback.UpdateClientInfo(Sony.this.m_accountClientInfo);
                     }
                 });
             }
@@ -97,14 +97,14 @@ public class PSN implements SystemAccountInterface {
         this.m_activity.runOnUiThread(new Runnable() {
             public void run() {
                 if (!str5.isEmpty() || str6.isEmpty() || str7.isEmpty()) {
-                    PSN.this.m_accountClientInfo.state = SystemAccountClientState.kSystemAccountClientState_SignedOut;
+                    Sony.this.m_accountClientInfo.state = SystemAccountClientState.kSystemAccountClientState_SignedOut;
                 } else {
-                    PSN.this.m_accountClientInfo.accountId = str6;
-                    PSN.this.m_accountClientInfo.alias = str8;
-                    PSN.this.m_accountClientInfo.signature = str7;
-                    PSN.this.m_accountClientInfo.state = SystemAccountClientState.kSystemAccountClientState_SignedIn;
+                    Sony.this.m_accountClientInfo.accountId = str6;
+                    Sony.this.m_accountClientInfo.alias = str8;
+                    Sony.this.m_accountClientInfo.signature = str7;
+                    Sony.this.m_accountClientInfo.state = SystemAccountClientState.kSystemAccountClientState_SignedIn;
                 }
-                PSN.this.m_callback.UpdateClientInfo(PSN.this.m_accountClientInfo);
+                Sony.this.m_callback.UpdateClientInfo(Sony.this.m_accountClientInfo);
             }
         });
     }
@@ -132,10 +132,10 @@ public class PSN implements SystemAccountInterface {
             public boolean shouldOverrideUrlLoading(WebView webView, WebResourceRequest webResourceRequest) {
                 String uri = webResourceRequest.getUrl().toString();
                 if (uri.contains("www.playstation.com")) {
-                    PSN.this.OnAccountSuccess("", "", "", "cancel");
+                    Sony.this.OnAccountSuccess("", "", "", "cancel");
                     dialog.dismiss();
                     return true;
-                } else if (!uri.startsWith(PSN.this.redirectUrl)) {
+                } else if (!uri.startsWith(Sony.this.redirectUrl)) {
                     return false;
                 } else {
                     StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder().permitAll().build());
@@ -155,18 +155,18 @@ public class PSN implements SystemAccountInterface {
                         String str = new String(byteArrayOutputStream.toByteArray(), StandardCharsets.UTF_8);
                         httpURLConnection.disconnect();
                         JSONObject jSONObject = new JSONObject(str);
-                        PSN.this.OnAccountSuccess(jSONObject.optString("id"), jSONObject.optString("alias"), jSONObject.optString("token"), "");
+                        Sony.this.OnAccountSuccess(jSONObject.optString("id"), jSONObject.optString("alias"), jSONObject.optString("token"), "");
                     } catch (MalformedURLException e) {
                         e.printStackTrace();
-                        PSN.this.OnAccountSuccess("", "", "", "url error");
+                        Sony.this.OnAccountSuccess("", "", "", "url error");
                     } catch (IOException e2) {
                         e2.printStackTrace();
-                        PSN.this.OnAccountSuccess("", "", "", "io error");
+                        Sony.this.OnAccountSuccess("", "", "", "io error");
                     } catch (JSONException e3) {
                         e3.printStackTrace();
-                        PSN.this.OnAccountSuccess("", "", "", "json error");
+                        Sony.this.OnAccountSuccess("", "", "", "json error");
                     }
-                    PSN.this.dialogCancelled = false;
+                    Sony.this.dialogCancelled = false;
                     dialog.dismiss();
                     return true;
                 }
@@ -176,11 +176,11 @@ public class PSN implements SystemAccountInterface {
         dialog.setCancelable(true);
         dialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
             public void onDismiss(DialogInterface dialogInterface) {
-                if (PSN.this.dialogCancelled) {
-                    PSN.this.OnAccountSuccess("", "", "", "cancel");
+                if (Sony.this.dialogCancelled) {
+                    Sony.this.OnAccountSuccess("", "", "", "cancel");
                 }
-                PSN.this.m_activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
-                PSN.this.m_activity.portraitOnResume = false;
+                Sony.this.m_activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
+                Sony.this.m_activity.portraitOnResume = false;
             }
         });
         this.m_activity.portraitOnResume = true;

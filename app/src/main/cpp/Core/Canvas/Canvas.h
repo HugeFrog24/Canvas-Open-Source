@@ -53,6 +53,7 @@ namespace Canvas {
     extern bool frameRateLimited;
     extern JavaVM *javaVM;
     extern JNIEnv *jniEnv;
+    extern jobject systemUI;
     extern jclass MainActivity;
     extern const char *configsPath;
 

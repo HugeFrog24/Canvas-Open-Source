@@ -279,3 +279,75 @@ DeviceInfo CipherUtils::get_DeviceInfo() {
     return deviceInfo;
 }
 
+void CipherUtils::performHapticFeedback(HapticFeedbackType _type) {
+    if (!Canvas::systemUI) return;
+
+    JNIEnv* env = nullptr;
+    bool needDetach = false;
+
+    // Get the JNI environment for the current thread
+    int getEnvResult = Canvas::javaVM->GetEnv((void**)&env, JNI_VERSION_1_6);
+    if (getEnvResult == JNI_EDETACHED) {
+        // Thread is not attached, attach it
+        if (Canvas::javaVM->AttachCurrentThread(&env, nullptr) == JNI_OK) {
+            needDetach = true;
+        } else {
+            return; // Failed to attach
+        }
+    } else if (getEnvResult != JNI_OK) {
+        return; // Failed to get env
+    }
+
+    const char* methodName;
+    switch (_type) {
+        case HapticFeedbackType::TYPE_SUCCESS:
+            methodName = "HapticFeedbackSuccess";
+            break;
+        case HapticFeedbackType::TYPE_SUCCESS_STRONG:
+            methodName = "HapticFeedbackSuccessStrong";
+            break;
+        case HapticFeedbackType::TYPE_WARNING:
+            methodName = "HapticFeedbackWarning";
+            break;
+        case HapticFeedbackType::TYPE_ERROR:
+            methodName = "HapticFeedbackError";
+            break;
+        case HapticFeedbackType::TYPE_SELECTION:
+            methodName = "HapticFeedbackSelection";
+            break;
+        case HapticFeedbackType::TYPE_IMPACT_LIGHT:
+            methodName = "HapticFeedbackImpactLight";
+            break;
+        case HapticFeedbackType::TYPE_IMPACT:
+            methodName = "HapticFeedbackImpact";
+            break;
+        case HapticFeedbackType::TYPE_IMPACT_HEAVY:
+            methodName = "HapticFeedbackImpactHeavy";
+            break;
+        default:
+            return;
+    }
+
+    if (env) {
+        if (env->ExceptionCheck()) {
+            env->ExceptionClear();
+        }
+
+        jclass clazz = env->GetObjectClass(Canvas::systemUI);
+        if (clazz) {
+            jmethodID methodID = env->GetMethodID(clazz, methodName, "()Z");
+            if (methodID) {
+                env->CallBooleanMethod(Canvas::systemUI, methodID);
+                if (env->ExceptionCheck()) {
+                    env->ExceptionClear();
+                }
+            }
+            env->DeleteLocalRef(clazz);
+        }
+    }
+
+    // Detach the thread if we attached it
+    if (needDetach) {
+        Canvas::javaVM->DetachCurrentThread();
+    }
+}

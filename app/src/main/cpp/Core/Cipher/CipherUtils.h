@@ -34,6 +34,17 @@ enum Flags {
     Any                 /**< Any segment. */
 };
 
+enum HapticFeedbackType {
+    TYPE_SUCCESS = 0,           /**< Success feedback. */
+    TYPE_SUCCESS_STRONG = 1,    /**< Strong success feedback. */
+    TYPE_WARNING = 2,           /**< Warning feedback. */
+    TYPE_ERROR = 3,             /**< Error feedback. */
+    TYPE_SELECTION = 4,         /**< Selection feedback. */
+    TYPE_IMPACT_LIGHT = 5,      /**< Light impact feedback. */
+    TYPE_IMPACT = 6,            /**< Impact feedback. */
+    TYPE_IMPACT_HEAVY = 7       /**< Heavy impact feedback. */
+};
+
 /**
  * @brief Provides functionalities for interacting with game memory, scanning patterns, and accessing game information.
  */
@@ -92,6 +103,12 @@ public:
     * @param _message The string to be added.
     */
     static DeviceInfo get_DeviceInfo();
+
+    /**
+     * @brief Perform haptic feedback of the specified type
+     * @param type The type of haptic feedback
+     */
+    static void performHapticFeedback(HapticFeedbackType _type);
 
 public:
     /**

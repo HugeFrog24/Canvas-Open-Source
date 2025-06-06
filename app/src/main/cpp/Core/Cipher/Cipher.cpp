@@ -4,6 +4,7 @@
 
 #include "Cipher.h"
 #include "CipherUtils.h"
+#include <jni.h>
 
 std::uint32_t Cipher::getGameVersion() {
     return CipherUtils::get_GameVersion();

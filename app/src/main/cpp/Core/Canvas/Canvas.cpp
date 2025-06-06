@@ -34,6 +34,7 @@ namespace Canvas {
     PRIVATE_API bool frameRateLimited;
     PRIVATE_API JavaVM *javaVM;
     PRIVATE_API JNIEnv *jniEnv;
+    PRIVATE_API jobject systemUI;
     PRIVATE_API jclass MainActivity;
     PRIVATE_API const char *configsPath;
 

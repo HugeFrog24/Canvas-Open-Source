@@ -109,6 +109,7 @@ public class SystemUI_android {
         this.m_activity = gameActivity;
         this.m_localizationManager = new LocalizationManager(gameActivity);
         this.m_markup = new Markup(gameActivity);
+
         this.m_textLabelManager = new TextLabelManager(gameActivity, this.m_localizationManager, this.m_markup);
         TextField textField = new TextField();
         this.m_textField = textField;
@@ -1128,6 +1129,18 @@ public class SystemUI_android {
         }
     }
 
+    String GetActiveLocalization() {
+        return LocalizationManager.GetActiveLocalization();
+    }
+
+    void SetActiveLocalization(String str) {
+        LocalizationManager.SetActiveLocalization(str);
+    }
+
+    boolean SupportsLocalization(String str) {
+        return this.m_localizationManager.SupportsLocalization(str);
+    }
+
     public void FreeLocalizedText(int i) {
         this.m_localizationManager.FreeLocalizedText(i);
     }
@@ -1425,21 +1438,21 @@ public class SystemUI_android {
         this.m_textLabelManager.RemoveTextLabel(i);
     }
 
-    boolean HapticFeedbackSuccess() {
+    public boolean HapticFeedbackSuccess() {
         if (!this.m_usingGamepad && this.m_enableHaptics) {
             this.m_activity.runOnUiThread(() -> SystemUI_android.this.m_activity.getBrigeView().performHapticFeedback(0));
         }
         return false;
     }
 
-    boolean HapticFeedbackSuccessStrong() {
+    public boolean HapticFeedbackSuccessStrong() {
         if (!this.m_usingGamepad && this.m_enableHaptics) {
             this.m_activity.runOnUiThread(() -> SystemUI_android.this.m_activity.getBrigeView().performHapticFeedback(0));
         }
         return false;
     }
 
-    boolean HapticFeedbackWarning() {
+    public boolean HapticFeedbackWarning() {
         if (!this.m_usingGamepad && this.m_enableHaptics) {
             this.m_activity.runOnUiThread(new Runnable() { // from class: com.tgc.sky.SystemUI_android.21
                 @Override // java.lang.Runnable
@@ -1451,7 +1464,7 @@ public class SystemUI_android {
         return false;
     }
 
-    boolean HapticFeedbackError() {
+    public boolean HapticFeedbackError() {
         if (!this.m_usingGamepad && this.m_enableHaptics) {
             this.m_activity.runOnUiThread(new Runnable() { // from class: com.tgc.sky.SystemUI_android.22
                 @Override // java.lang.Runnable
@@ -1463,28 +1476,28 @@ public class SystemUI_android {
         return false;
     }
 
-    boolean HapticFeedbackSelection() {
+    public boolean HapticFeedbackSelection() {
         if (!this.m_usingGamepad && this.m_enableHaptics) {
             this.m_activity.runOnUiThread(() -> SystemUI_android.this.m_activity.getBrigeView().performHapticFeedback(6));
         }
         return false;
     }
 
-    boolean HapticFeedbackImpactLight() {
+    public boolean HapticFeedbackImpactLight() {
         if (!this.m_usingGamepad && this.m_enableHaptics) {
             this.m_activity.runOnUiThread(() -> SystemUI_android.this.m_activity.getBrigeView().performHapticFeedback(3));
         }
         return false;
     }
 
-    boolean HapticFeedbackImpact() {
+    public boolean HapticFeedbackImpact() {
         if (!this.m_usingGamepad && this.m_enableHaptics) {
             this.m_activity.runOnUiThread(() -> SystemUI_android.this.m_activity.getBrigeView().performHapticFeedback(1));
         }
         return false;
     }
 
-    boolean HapticFeedbackImpactHeavy() {
+    public boolean HapticFeedbackImpactHeavy() {
         if (!this.m_usingGamepad && this.m_enableHaptics) {
             this.m_activity.runOnUiThread(() -> SystemUI_android.this.m_activity.getBrigeView().performHapticFeedback(0));
         }

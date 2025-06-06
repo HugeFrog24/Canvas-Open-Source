@@ -198,5 +198,6 @@ public class MainActivity extends Activity {
     public static native void onKeyboardCompleteNative(String message);
     public static native void customServer(String url);
     public static native void lateInitUserLibs();
+    public static native void getSysetemUI(Object systemUI);
 
 }

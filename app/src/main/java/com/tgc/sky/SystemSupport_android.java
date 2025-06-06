@@ -1,23 +1,22 @@
 package com.tgc.sky;
 
-import android.app.Activity;
 import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.text.Html;
 import android.text.method.LinkMovementMethod;
-import android.util.Log;
+import android.view.View;
 import android.widget.TextView;
+import android.view.ViewGroup;
+import android.view.Window;
+import android.widget.ImageButton;
+import android.app.Dialog;
 
 import androidx.appcompat.app.AlertDialog;
 
-import com.tgc.sky.GameActivity;
-import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import git.artdeell.skymodloader.R;
 
@@ -87,11 +86,38 @@ public class SystemSupport_android implements GameActivity.OnActivityResultListe
 
     public void ShowFAQs() {
         m_activity.runOnUiThread(()->{
-            AlertDialog.Builder bldr = new AlertDialog.Builder(m_activity);
-            bldr.setTitle(R.string.app_name);
-            bldr.setMessage(Html.fromHtml(m_activity.getString(R.string.app_info), Html.FROM_HTML_MODE_COMPACT));
-            bldr.setPositiveButton(android.R.string.ok, (d,v)->{});
-            ((TextView)bldr.show().findViewById(android.R.id.message)).setMovementMethod(LinkMovementMethod.getInstance());
+            Dialog dialog = new Dialog(m_activity, R.style.AboutDialog);
+            dialog.setContentView(R.layout.about_dialog);
+
+            // Support links
+            setupLink(dialog, R.id.englishTelegram, "https://t.me/+Hc6QeQVTH1JjNjky");
+            setupLink(dialog, R.id.russianTelegram, "https://t.me/+mue7BZWmWOxkMDUy");
+
+            // Original developers
+            setupLink(dialog, R.id.icarusGithub, "https://github.com/lukas0x1");
+            setupLink(dialog, R.id.artDevGithub, "https://github.com/artdeell");
+
+            // Contributors
+            setupLink(dialog, R.id.romanGithub, "https://github.com/RomanChamelo");
+            setupLink(dialog, R.id.kiojeenGithub, "https://github.com/Kiojeen");
+            setupLink(dialog, R.id.gxostGithub, "https://github.com/gxosty");
+
+            // Design credits
+            setupLink(dialog, R.id.bannerVk, "https://vk.com/son583");
+            setupLink(dialog, R.id.iconTelegram, "https://t.me/Eliatshaha");
+
+            // Original game
+            setupLink(dialog, R.id.thatgamecompanyLink, "https://thatgamecompany.com/");
+
+            dialog.show();
+        });
+    }
+
+    private void setupLink(Dialog dialog, int viewId, String url) {
+        TextView textView = dialog.findViewById(viewId);
+        textView.setOnClickListener(v -> {
+            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+            m_activity.startActivity(intent);
         });
     }
 

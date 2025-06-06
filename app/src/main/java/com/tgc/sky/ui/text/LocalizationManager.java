@@ -1,16 +1,23 @@
 package com.tgc.sky.ui.text;
 
-import android.annotation.SuppressLint;
+import android.content.res.Configuration;
+import android.content.res.Resources;
 
 import androidx.constraintlayout.core.motion.utils.TypedValues;
 import androidx.core.app.FrameMetricsAggregator;
 import com.tgc.sky.GameActivity;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Locale;
+import java.lang.reflect.Field;
+import java.util.Map;
 
 import git.artdeell.skymodloader.SMLApplication;
 
 
 public class LocalizationManager {
+    private static final Map<String, String> DEFAULT_COUNTRY_CODES;
+    private static LocalizationManager g_instance = null;
     private static int kMaxLocalizedStrings = 512;
     private GameActivity m_activity;
     private boolean m_touchControls = true;
@@ -24,7 +31,47 @@ public class LocalizationManager {
 
     public native boolean FreeTextId(int i);
 
+    static {
+        HashMap map = new HashMap();
+        DEFAULT_COUNTRY_CODES = map;
+        map.put("en", "US");
+        map.put("es", "ES");
+        map.put("fr", "FR");
+        map.put("de", "DE");
+        map.put("ja", "JP");
+        map.put("ko", "KR");
+        map.put("zh", "CN");
+        map.put("zh-Hant", "TW");
+        map.put("pt", "BR");
+        map.put("it", "IT");
+        map.put("ru", "RU");
+        map.put("ar", "SA");
+        map.put("nl", "NL");
+        map.put("hi", "IN");
+        map.put("tr", "TR");
+        map.put("th", "TH");
+        map.put("vi", "VN");
+        map.put("pl", "PL");
+        map.put("sv", "SE");
+        map.put("fi", "FI");
+        map.put("da", "DK");
+        map.put("no", "NO");
+        map.put("he", "IL");
+        map.put("cs", "CZ");
+        map.put("hu", "HU");
+        map.put("el", "GR");
+        map.put("ro", "RO");
+        map.put("sk", "SK");
+        map.put("uk", "UA");
+        map.put("bg", "BG");
+        map.put("hr", "HR");
+        map.put("sr", "RS");
+        map.put("ms", "MY");
+        map.put("id", "ID");
+    }
+
     public LocalizationManager(GameActivity gameActivity) {
+        g_instance = this;
         this.m_activity = gameActivity;
         for (int i = 0; i < kMaxLocalizedStrings; i++) {
             this.m_localizedStrings.add(new LocalizedStringArgs());
@@ -53,6 +100,77 @@ public class LocalizationManager {
             return SMLApplication.skyRes.getString(id);
         }
         return r10;
+    }
+
+    public static String GetActiveLocalization() {
+        return Locale.getDefault().getLanguage();
+    }
+    public static String GetIETFLanguageTag() {
+        Locale locale = Locale.getDefault();
+        String language = locale.getLanguage();
+        String country = locale.getCountry();
+        if (!country.isEmpty()) {
+            return language + "-" + country;
+        }
+        return GetIETFLanguageTag(language);
+    }
+
+    public static String GetIETFLanguageTag(String str) {
+        String str2 = DEFAULT_COUNTRY_CODES.get(str);
+        return (str2 == null || str2.isEmpty()) ? str : str + "-" + str2;
+    }
+
+    public static void SetActiveLocalization(String str) {
+        GameActivity gameActivity;
+        String str2 = DEFAULT_COUNTRY_CODES.get(str);
+        if (str2 == null) {
+            str2 = "";
+        }
+        Locale locale = new Locale(str, str2);
+        Locale.setDefault(locale);
+        LocalizationManager localizationManager = g_instance;
+        if (localizationManager == null || (gameActivity = localizationManager.m_activity) == null) {
+            return;
+        }
+        Resources resources = gameActivity.getResources();
+        Configuration configuration = new Configuration(resources.getConfiguration());
+        configuration.locale = locale;
+        resources.updateConfiguration(configuration, resources.getDisplayMetrics());
+    }
+
+    static int getFirstStringResourceId() {
+        /*
+        try {
+            Field[] declaredFields = R.string.class.getDeclaredFields();
+            if (declaredFields.length > 0) {
+                return declaredFields[0].getInt(null);
+            }
+            return 0;
+        } catch (Exception unused) {
+            return 0;
+        }
+
+         */
+        return 0x7f10001b;
+    }
+
+    public boolean SupportsLocalization(String str) throws Resources.NotFoundException {
+//        Locale locale = Locale.getDefault();
+//        Locale locale2 = new Locale(str);
+//        if (locale.getLanguage().equals(locale2.getLanguage())) {
+//            return true;
+//        }
+//        Locale.setDefault(locale2);
+//        Resources resources = this.m_activity.getResources();
+//        Configuration configuration = new Configuration(resources.getConfiguration());
+//        configuration.locale = locale2;
+//        resources.updateConfiguration(configuration, resources.getDisplayMetrics());
+//        String string = resources.getString(getFirstStringResourceId());
+//        Locale.setDefault(locale);
+//        configuration.locale = locale;
+//        resources.updateConfiguration(configuration, resources.getDisplayMetrics());
+//        return !string.equals(resources.getString(r1));
+        return true;
     }
 
     public boolean HasLocalizedString(String str) {

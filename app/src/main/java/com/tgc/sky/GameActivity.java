@@ -7,7 +7,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
-import android.graphics.Insets;
 import android.graphics.PixelFormat;
 import android.graphics.Rect;
 import android.graphics.RectF;
@@ -33,7 +32,6 @@ import android.view.WindowManager;
 import android.view.animation.AccelerateInterpolator;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 
@@ -257,6 +255,7 @@ public class GameActivity extends TGCNativeActivity {
         SystemRemoteConfig_android.getInstance().Initialize(this);
         SystemSupport_android.getInstance().Initialize(this);
         this.m_systemUI = new SystemUI_android(this);
+        git.artdeell.skymodloader.MainActivity.getSysetemUI(this.m_systemUI);
         onCreateNative();
         initGameController();
         //logoView = findViewById(R.id.imageView);

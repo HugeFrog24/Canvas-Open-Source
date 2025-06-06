@@ -6,7 +6,7 @@ import git.artdeell.skymodloader.auth.Facebook;
 import git.artdeell.skymodloader.auth.Google;
 import git.artdeell.skymodloader.auth.Huawei;
 import git.artdeell.skymodloader.auth.Nintendo;
-import git.artdeell.skymodloader.auth.PSN;
+import git.artdeell.skymodloader.auth.Sony;
 import git.artdeell.skymodloader.auth.Steam;
 import git.artdeell.skymodloader.auth.Twitch;
 
@@ -27,7 +27,7 @@ public class SystemAccounts_android implements SystemAccountInterface.UpdateClie
     private Google m_systemAccountGoogle;
     private Huawei m_systemAccountHuawei;
     private Nintendo m_systemAccountNintendo;
-    private PSN m_systemAccountPlaystation;
+    private Sony m_systemAccountPlaystation;
     private Steam m_systemAccountSteam;
     private Twitch m_systemAccountTwitch;
 
@@ -48,7 +48,7 @@ public class SystemAccounts_android implements SystemAccountInterface.UpdateClie
         nintendo.Initialize(gameActivity, this);
         Huawei huawei = this.m_systemAccountHuawei = new Huawei();
         huawei.Initialize(gameActivity, this);
-        this.m_systemAccountPlaystation = new PSN();
+        this.m_systemAccountPlaystation = new Sony();
         m_systemAccountPlaystation.Initialize(gameActivity, this);
         Steam steam = this.m_systemAccountSteam = new Steam();
         steam.Initialize(gameActivity, this);
@@ -84,7 +84,7 @@ public class SystemAccounts_android implements SystemAccountInterface.UpdateClie
             INTS[SystemAccountType.kSystemAccountType_Apple.ordinal()] = 4;
             INTS[SystemAccountType.kSystemAccountType_Nintendo.ordinal()] = 5;
             INTS[SystemAccountType.kSystemAccountType_Huawei.ordinal()] = 6;
-            INTS[SystemAccountType.kSystemAccountType_PSN.ordinal()] = 7;
+            INTS[SystemAccountType.kSystemAccountType_Sony.ordinal()] = 7;
             INTS[SystemAccountType.kSystemAccountType_Steam.ordinal()] = 8;
             INTS[SystemAccountType.kSystemAccountType_Twitch.ordinal()] = 9;
             INTS[SystemAccountType.kSystemAccountType_Local.ordinal()] = 10;

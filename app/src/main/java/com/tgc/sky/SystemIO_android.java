@@ -627,6 +627,35 @@ public class SystemIO_android {
         return this.m_videoRecorder.isRecording();
     }
 
+    // TODO: Implement speech recognition
+    boolean SupportsSpeechRecognition() {
+        return false; //this.m_speechRecognizer.supportsRecognition();
+    }
+
+    int StartSpeechRecognition(int i, int i2) {
+        return 0; //this.m_speechRecognizer.startRecognition(i, i2);
+    }
+
+    boolean StopSpeechRecognition() {
+        return false;//this.m_speechRecognizer.stopRecognition();
+    }
+
+    boolean IsSpeechRecognitionIdActive(int i) {
+        return false;// this.m_speechRecognizer.isIdActive(i);
+    }
+
+    boolean IsSpeechRecognitionActive() {
+        return false;// this.m_speechRecognizer.isActive();
+    }
+
+    boolean IsSpeechRecognitionRecording() {
+        return false; // this.m_speechRecognizer.isRecording();
+    }
+
+    String GetSpeechRecognitionTranscription() {
+        return "[[[not supported]]]";// this.m_speechRecognizer.getTranscription();
+    }
+
 
     /* access modifiers changed from: package-private */
     public float BatteryLevel() {
