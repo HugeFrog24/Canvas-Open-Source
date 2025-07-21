@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
+import android.graphics.Insets;
 import android.graphics.PixelFormat;
 import android.graphics.Rect;
 import android.graphics.RectF;
@@ -32,6 +33,7 @@ import android.view.WindowManager;
 import android.view.animation.AccelerateInterpolator;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 
@@ -40,7 +42,7 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.tgc.sky.io.AudioDeviceType;
 import com.tgc.sky.ui.panels.BasePanel;
-
+import com.tgc.sky.ui.Utils;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Timer;
@@ -562,6 +564,58 @@ public class GameActivity extends TGCNativeActivity {
         return onTouchNative(motionEvent.getPointerId(actionIndex) + 1, actionMasked, motionEvent.getX(actionIndex), motionEvent.getY(actionIndex), (double) motionEvent.getEventTime());
     }
 
+    public void notifyEditTextFocus(boolean z) {
+        this.m_editTextFocused = z;
+
+        int identifier;
+        if (Build.VERSION.SDK_INT < 30) {
+            try {
+                int iIntValue = ((Integer) InputMethodManager.class.getMethod("getInputMethodWindowVisibleHeight", new Class[0]).invoke((InputMethodManager) getSystemService("input_method"), new Object[0])).intValue();
+                if (this.m_editTextFocused && iIntValue == 0) {
+                    iIntValue = Utils.dp2px(30.0f);
+                } else if (this.m_nativeWidth < this.m_nativeHeight && (identifier = getResources().getIdentifier("navigation_bar_height", "dimen", "android")) > 0) {
+                    iIntValue += getResources().getDimensionPixelSize(identifier);
+                }
+                toggleKeyboard(this.m_editTextFocused, iIntValue);
+                if (this.m_editTextFocused) {
+                    getBridgeView().postDelayed((Runnable) () -> notifyEditTextFocus(m_editTextFocused), 100L);
+                }
+            } catch (Exception unused) {
+            }
+        }
+    }
+
+    protected void handleKeyboardInsets(View view, WindowInsets windowInsets) {
+        if (Build.VERSION.SDK_INT >= 30) {
+            boolean zIsVisible = windowInsets.isVisible(WindowInsets.Type.ime());
+            Insets insets = windowInsets.getInsets(WindowInsets.Type.ime());
+            toggleKeyboard(zIsVisible, insets.bottom - insets.top);
+        }
+    }
+
+    protected void toggleKeyboard(boolean z, int i) {
+        LocalBroadcastManager localBroadcastManager = LocalBroadcastManager.getInstance(this);
+        if (!z) {
+            if (this.m_isKeyboardShowing) {
+                this.m_isKeyboardShowing = false;
+                this.m_keyboardHeight = 0;
+                onHideKeyboard();
+                localBroadcastManager.sendBroadcast(new Intent("KeyboardWillHide"));
+                return;
+            }
+            return;
+        }
+        if (this.m_isKeyboardShowing && i == this.m_keyboardHeight) {
+            return;
+        }
+        this.m_isKeyboardShowing = true;
+        this.m_keyboardHeight = i;
+        onShowKeyboard(i);
+        Intent intent = new Intent("KeyboardWillShow");
+        intent.putExtra("KeyboardHeight", i);
+        localBroadcastManager.sendBroadcast(intent);
+    }
+
     public void onGlobalLayout() {
         Rect rect = new Rect();
         this.m_relativeLayout.getWindowVisibleDisplayFrame(rect);
@@ -590,7 +644,7 @@ public class GameActivity extends TGCNativeActivity {
         for (OnKeyboardListener onKeyboardListener : arrayList) {
             onKeyboardListener.onKeyboardChange(true, i);
         }
-        getBrigeView().postDelayed(() -> GameActivity.hideNavigationFullScreen(GameActivity.this.getBrigeView()), 100L);
+        getBridgeView().postDelayed(() -> GameActivity.hideNavigationFullScreen(GameActivity.this.getBridgeView()), 100L);
     }
 
     /* access modifiers changed from: protected */
@@ -813,7 +867,7 @@ public class GameActivity extends TGCNativeActivity {
         }
     }
 
-    public RelativeLayout getBrigeView() {
+    public RelativeLayout getBridgeView() {
         return this.m_relativeLayout;
     }
 

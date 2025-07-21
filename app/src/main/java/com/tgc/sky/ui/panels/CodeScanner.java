@@ -972,7 +972,7 @@ public class CodeScanner extends BasePanel implements GameActivity.OnKeyboardLis
             this.mHandler.run(this.mCodeInput, ResultOptions.kCodeScanner_ValidateShortCode.ordinal(), false);
         }
         ((InputMethodManager) this.m_activity.getSystemService(Context.INPUT_METHOD_SERVICE)).hideSoftInputFromWindow(textView.getWindowToken(), 0);
-        GameActivity.hideNavigationFullScreen(this.m_activity.getBrigeView());
+        GameActivity.hideNavigationFullScreen(this.m_activity.getBridgeView());
         updateState();
         updateView();
         return false;

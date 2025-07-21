@@ -46,7 +46,7 @@ public class TextLabelManager {
         this.m_activity = gameActivity;
         this.m_localizationManager = localizationManager;
         this.m_markup = markup;
-        this.m_labels = Collections.synchronizedList(new ArrayList(kMaxLabels));
+        this.m_labels = Collections.synchronizedList(new ArrayList<>(kMaxLabels));
         for (int i = 0; i < kMaxLabels; i++) {
             this.m_labels.add(new TextLabel());
         }
@@ -69,51 +69,49 @@ public class TextLabelManager {
     }
 
     public void AddTextLabel(final int i) {
-        this.m_activity.runOnUiThread(new Runnable() {
-            public void run() {
-                TextLabel textLabel = (TextLabel) TextLabelManager.this.m_labels.get(TextLabelManager.this.GetAllocatedLabelIdx(i));
-                TextAttributes textAttributes = textLabel.attrs;
-                TextPositioning textPositioning = textLabel.pos;
-                LocalizedStringArgs GetLocalizedStringArgs = TextLabelManager.this.m_localizationManager.GetLocalizedStringArgs(textLabel.textId);
-                textLabel.finalAttributedString = TextLabelManager.this.ProcessLabelText(GetLocalizedStringArgs, textAttributes);
-                textLabel.lastTextIdChange = GetLocalizedStringArgs.lastChangeCounter;
-                EllipsizingTextView ellipsizingTextView = new EllipsizingTextView(TextLabelManager.this.m_activity);
-                ellipsizingTextView.setText(textLabel.finalAttributedString, TextView.BufferType.SPANNABLE);
-                if (textAttributes.maxNumberOfLines > 0) {
-                    ellipsizingTextView.setMaxLines(textAttributes.maxNumberOfLines);
-                }
-                if (textAttributes.truncateWithEllipses) {
-                    ellipsizingTextView.setEllipsize(TextUtils.TruncateAt.END);
-                }
-                if (textAttributes.adjustFontSizeToFitWidth) {
-                    TextViewCompat.setAutoSizeTextTypeWithDefaults(ellipsizingTextView, 1);
-                }
-                RectF transformRectToSystem = TextLabelManager.this.m_activity.transformRectToSystem(textPositioning.ProgramRect());
-                TextLabelManager.AdjustTextRect(textPositioning, ellipsizingTextView, transformRectToSystem);
-                float transformWidthToSystem = TextLabelManager.this.m_activity.transformWidthToSystem(textPositioning.padWidth);
-                float transformHeightToSystem = TextLabelManager.this.m_activity.transformHeightToSystem(textPositioning.padHeight);
-                transformRectToSystem.right += transformWidthToSystem;
-                transformRectToSystem.bottom += transformHeightToSystem;
-                TextLabelManager.ApplyTextPositioningAnchorPoint(textPositioning, transformRectToSystem);
-                TextLabelManager.this.m_activity.transformPointToSystem(textPositioning.f1049x, textPositioning.f1050y, transformRectToSystem);
-                RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams((int) transformRectToSystem.width(), (int) transformRectToSystem.height());
-                layoutParams.leftMargin = (int) transformRectToSystem.left;
-                layoutParams.topMargin = (int) transformRectToSystem.top;
-                int width = TextLabelManager.this.m_activity.getBrigeView().getWidth();
-                if (transformRectToSystem.right > width) {
-                    layoutParams.rightMargin = width - ((int) transformRectToSystem.right);
-                }
-                ellipsizingTextView.setLayoutParams(layoutParams);
-                int i2 = (int) (transformWidthToSystem * 0.5f);
-                int i3 = (int) (transformHeightToSystem * 0.5f);
-                ellipsizingTextView.setPadding(i2, i3, i2, i3);
-                TextLabelManager.this.UpdateRemainingAttrsAndPos(ellipsizingTextView, null, textAttributes, null, textPositioning);
-                TextLabelManager.this.DoClipping(ellipsizingTextView, transformRectToSystem, textPositioning);
-                textLabel.view = ellipsizingTextView;
-                TextLabelManager.this.m_activity.getBrigeView().addView(ellipsizingTextView);
-                TextLabelManager textLabelManager = TextLabelManager.this;
-                textLabelManager.UpdateCachedSize(textLabel, textLabelManager.m_activity.transformRectToProgram(transformRectToSystem));
+        this.m_activity.runOnUiThread(() -> {
+            TextLabel textLabel = TextLabelManager.this.m_labels.get(TextLabelManager.this.GetAllocatedLabelIdx(i));
+            TextAttributes textAttributes = textLabel.attrs;
+            TextPositioning textPositioning = textLabel.pos;
+            LocalizedStringArgs GetLocalizedStringArgs = TextLabelManager.this.m_localizationManager.GetLocalizedStringArgs(textLabel.textId);
+            textLabel.finalAttributedString = TextLabelManager.this.ProcessLabelText(GetLocalizedStringArgs, textAttributes);
+            textLabel.lastTextIdChange = GetLocalizedStringArgs.lastChangeCounter;
+            EllipsizingTextView ellipsizingTextView = new EllipsizingTextView(TextLabelManager.this.m_activity);
+            ellipsizingTextView.setText(textLabel.finalAttributedString, TextView.BufferType.SPANNABLE);
+            if (textAttributes.maxNumberOfLines > 0) {
+                ellipsizingTextView.setMaxLines(textAttributes.maxNumberOfLines);
             }
+            if (textAttributes.truncateWithEllipses) {
+                ellipsizingTextView.setEllipsize(TextUtils.TruncateAt.END);
+            }
+            if (textAttributes.adjustFontSizeToFitWidth) {
+                TextViewCompat.setAutoSizeTextTypeWithDefaults(ellipsizingTextView, 1);
+            }
+            RectF transformRectToSystem = TextLabelManager.this.m_activity.transformRectToSystem(textPositioning.ProgramRect());
+            TextLabelManager.AdjustTextRect(textPositioning, ellipsizingTextView, transformRectToSystem);
+            float transformWidthToSystem = TextLabelManager.this.m_activity.transformWidthToSystem(textPositioning.padWidth);
+            float transformHeightToSystem = TextLabelManager.this.m_activity.transformHeightToSystem(textPositioning.padHeight);
+            transformRectToSystem.right += transformWidthToSystem;
+            transformRectToSystem.bottom += transformHeightToSystem;
+            TextLabelManager.ApplyTextPositioningAnchorPoint(textPositioning, transformRectToSystem);
+            TextLabelManager.this.m_activity.transformPointToSystem(textPositioning.x, textPositioning.y, transformRectToSystem);
+            RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams((int) transformRectToSystem.width(), (int) transformRectToSystem.height());
+            layoutParams.leftMargin = (int) transformRectToSystem.left;
+            layoutParams.topMargin = (int) transformRectToSystem.top;
+            int width = TextLabelManager.this.m_activity.getBridgeView().getWidth();
+            if (transformRectToSystem.right > width) {
+                layoutParams.rightMargin = width - ((int) transformRectToSystem.right);
+            }
+            ellipsizingTextView.setLayoutParams(layoutParams);
+            int i2 = (int) (transformWidthToSystem * 0.5f);
+            int i3 = (int) (transformHeightToSystem * 0.5f);
+            ellipsizingTextView.setPadding(i2, i3, i2, i3);
+            TextLabelManager.this.UpdateRemainingAttrsAndPos(ellipsizingTextView, null, textAttributes, null, textPositioning);
+            TextLabelManager.this.DoClipping(ellipsizingTextView, transformRectToSystem, textPositioning);
+            textLabel.view = ellipsizingTextView;
+            TextLabelManager.this.m_activity.getBridgeView().addView(ellipsizingTextView);
+            TextLabelManager textLabelManager = TextLabelManager.this;
+            textLabelManager.UpdateCachedSize(textLabel, textLabelManager.m_activity.transformRectToProgram(transformRectToSystem));
         });
     }
 
@@ -212,12 +210,12 @@ public class TextLabelManager {
                     transformRectToSystem.bottom += transformHeightToSystem;
                     ApplyTextPositioningAnchorPoint(pos, transformRectToSystem);
 
-                    TextLabelManager.this.m_activity.transformPointToSystem(pos.f1049x, pos.f1050y, transformRectToSystem);
+                    TextLabelManager.this.m_activity.transformPointToSystem(pos.x, pos.y, transformRectToSystem);
 
                     final RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams((int)transformRectToSystem.width(), (int)transformRectToSystem.height());
                     layoutParams.leftMargin = (int)transformRectToSystem.left;
                     layoutParams.topMargin = (int)transformRectToSystem.top;
-                    final int width = TextLabelManager.this.m_activity.getBrigeView().getWidth();
+                    final int width = TextLabelManager.this.m_activity.getBridgeView().getWidth();
                     if (transformRectToSystem.right > width) {
                         layoutParams.rightMargin = width - (int)transformRectToSystem.right;
                     }
@@ -232,11 +230,11 @@ public class TextLabelManager {
                     transformRectToSystem = new RectF(0.0f, 0.0f, (float)layoutParams2.width, (float)layoutParams2.height);
                     ApplyTextPositioningAnchorPoint(pos, transformRectToSystem);
 
-                    TextLabelManager.this.m_activity.transformPointToSystem(pos.f1049x, pos.f1050y, transformRectToSystem);
+                    TextLabelManager.this.m_activity.transformPointToSystem(pos.x, pos.y, transformRectToSystem);
 
                     layoutParams2.leftMargin = (int)transformRectToSystem.left;
                     layoutParams2.topMargin = (int)transformRectToSystem.top;
-                    final int width2 = TextLabelManager.this.m_activity.getBrigeView().getWidth();
+                    final int width2 = TextLabelManager.this.m_activity.getBridgeView().getWidth();
                     if (transformRectToSystem.right > width2) {
                         layoutParams2.rightMargin = width2 - (int)transformRectToSystem.right;
                     }
@@ -378,7 +376,7 @@ public class TextLabelManager {
             rectF.bottom = rectF.top + height;
             return;
         }
-        int i = textPositioning.f1047h.getValue();
+        int i = textPositioning.h.getValue();
         if (i == 1) {
             rectF.left = 0.0f;
         } else if (i == 2) {
@@ -387,7 +385,7 @@ public class TextLabelManager {
             rectF.left = -width;
         }
         rectF.right = rectF.left + width;
-        int i2 = textPositioning.f1048v.getValue();
+        int i2 = textPositioning.v.getValue();
         if (i2 == 1) {
             rectF.top = 0.0f;
         } else if (i2 == 2) {
@@ -430,8 +428,8 @@ public class TextLabelManager {
         if (textAttributes == null || textAttributes.textColor[3] != textAttributes2.textColor[3]) {
             textView.setAlpha(textAttributes2.textColor[3]);
         }
-        if (textPositioning == null || textPositioning.f1051z != textPositioning2.f1051z) {
-            textView.setZ(textPositioning2.f1051z);
+        if (textPositioning == null || textPositioning.z != textPositioning2.z) {
+            textView.setZ(textPositioning2.z);
         }
     }
 

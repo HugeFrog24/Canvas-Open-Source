@@ -16,6 +16,7 @@ import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Build;
@@ -109,17 +110,16 @@ public class SystemUI_android {
         this.m_activity = gameActivity;
         this.m_localizationManager = new LocalizationManager(gameActivity);
         this.m_markup = new Markup(gameActivity);
-
         this.m_textLabelManager = new TextLabelManager(gameActivity, this.m_localizationManager, this.m_markup);
         TextField textField = new TextField();
         this.m_textField = textField;
-        textField.initWithParams(gameActivity, this);
+        textField.initWithParams(gameActivity);
         this.m_textFieldLimiter = new TextFieldLimiter();
         this.m_keyboardIsShowing = false;
         this.m_keyboardHeight = 0.0f;
         this.m_result = new DialogResult();
         this.m_qrCameraHandler = new QRCameraHandler(gameActivity, (str, i, z) -> SystemUI_android.this.SetResult(str, i, z));
-        this.m_currentId = 0;
+        this.m_currentId = -1;
         this.m_activity.addOnKeyboardListener((z, i) -> {
             SystemUI_android.this.m_keyboardIsShowing = z;
             SystemUI_android.this.m_keyboardHeight = i;
@@ -186,7 +186,7 @@ public class SystemUI_android {
     }
 
     public boolean GetMainWindowAttachedSheet() {
-        return !this.m_activity.getBrigeView().hasWindowFocus();
+        return !this.m_activity.getBridgeView().hasWindowFocus();
     }
 
     void AttemptRotationToDeviceOrientation() {
@@ -211,7 +211,7 @@ public class SystemUI_android {
         if (SMLApplication.skyRes.getConfiguration().orientation == 2) {
             this.m_activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
         } else {
-            this.m_activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT);
+            this.m_activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
         }
     }
 
@@ -224,49 +224,24 @@ public class SystemUI_android {
         return this.m_isOrientationLocked;
     }
 
-    int ShowTextField(final String str, final int i, final int i2) {
-        int TryActivate;
-        if (this.m_textField.getState() == TextField.State.kTextFieldState_Hidden && (TryActivate = this.m_textField.TryActivate()) != -1) {
-            this.m_textField.setState(TextField.State.kTextFieldState_RequestShow);
-            this.m_activity.runOnUiThread(() -> {
-                SystemUI_android.this.m_textField.showTextFieldWithPrompt(SystemUI_android.this.LocalizeString(str), i, i2);
-                SystemUI_android.this.m_textField.setState(TextField.State.kTextFieldState_Showing);
-            });
-            return TryActivate;
-        }
-        return -1;
-    }
-
-    int ShowTextField(final String str, final String str2, final int i, final int i2, final boolean z) {
-        int TryActivate;
-        if (this.m_textField.getState() == TextField.State.kTextFieldState_Hidden && (TryActivate = this.m_textField.TryActivate()) != -1) {
-            this.m_textField.setState(TextField.State.kTextFieldState_RequestShow);
-            this.m_activity.runOnUiThread(() -> {
-                SystemUI_android.this.m_textField.showTextFieldWithPrompt(SystemUI_android.this.LocalizeString(str), str2, i, i2, z);
-                SystemUI_android.this.m_textField.setState(TextField.State.kTextFieldState_Showing);
-            });
-            return TryActivate;
-        }
-        return -1;
+    int ShowTextField(String str, String str2, int i, int i2, boolean z) {
+        return this.m_textField.showTextFieldWithPromptAsync(LocalizeString(str), str2, i, i2, z);
     }
 
     void HideTextField() {
-        if (this.m_textField.getState() != TextField.State.kTextFieldState_RequestHide && this.m_textField.getState() != TextField.State.kTextFieldState_Hidden) {
-            this.m_textField.setState(TextField.State.kTextFieldState_RequestHide);
-            this.m_activity.runOnUiThread(() -> {
-                SystemUI_android.this.m_textField.hideTextField();
-                SystemUI_android.this.m_textField.setState(TextField.State.kTextFieldState_Hidden);
-            });
-            this.m_textField.clearId();
-        }
+        this.m_textField.hideTextFieldAsync();
     }
 
     boolean IsTextFieldIdActive(int i) {
-        return this.m_textField.IsActiveId(i);
+        return this.m_textField.isIdActive(i);
     }
 
     boolean IsTextFieldShowing() {
         return this.m_textField.getState() == TextField.State.kTextFieldState_Showing;
+    }
+
+    Rect GetTextFieldHitRect() {
+        return this.m_textField.getHitRect();
     }
 
     float GetTextFieldHeight() {
@@ -279,6 +254,10 @@ public class SystemUI_android {
 
     String GetTextEditBuffer() {
         return this.m_textField.getTextBuffer();
+    }
+
+    String GetTextEditPrompt() {
+        return this.m_textField.getPrompt();
     }
 
     int GetTextEditCursor() {
@@ -335,7 +314,7 @@ public class SystemUI_android {
             layoutParams2.topMargin = dp2px;
             frameLayout2.addView(editText, layoutParams);
             builder.setView(frameLayout2);
-            builder.setOnDismissListener(dialogInterface -> GameActivity.hideNavigationFullScreen(SystemUI_android.this.m_activity.getBrigeView()));
+            builder.setOnDismissListener(dialogInterface -> GameActivity.hideNavigationFullScreen(SystemUI_android.this.m_activity.getBridgeView()));
             builder.setPositiveButton(LocalizeString3, (dialogInterface, i3) -> {
                 String obj = editText.getText().toString();
                 if (obj.isEmpty()) {
@@ -1222,86 +1201,45 @@ public class SystemUI_android {
     }
 
     public void AddTextLabel(int i, boolean z, boolean z2, boolean z3, boolean z4, boolean z5, float f, float f2, boolean z6, int i2, boolean z7, int i3, float[] fArr, float[] fArr2, float f3, float[] fArr3, float[] fArr4, float f4, float f5, float f6, int i4, int i5, boolean z8, float f7, float f8, float f9, float f10, float f11, float f12, float f13, float f14, boolean z9, boolean z10, int i6, boolean z11) {
-        TextLabel GetTextLabel = this.m_textLabelManager.GetTextLabel(i);
-        if (GetTextLabel == null) {
+        TextLabel textLabelGetTextLabel = this.m_textLabelManager.GetTextLabel(i);
+        if (textLabelGetTextLabel == null) {
             return;
         }
-        GetTextLabel.attrs.fontName = "";
-        GetTextLabel.attrs.hasBackground = z;
-        GetTextLabel.attrs.hasShadow = z2;
-        GetTextLabel.attrs.forceBold = z3;
-        GetTextLabel.attrs.adjustFontSizeToFitWidth = z4;
-        GetTextLabel.attrs.ignoreMarkupOptimization = z5;
-        GetTextLabel.attrs.fontSize = f;
-        GetTextLabel.attrs.scale = f2;
-        GetTextLabel.attrs.trilinearMinification = z6;
-        GetTextLabel.attrs.maxNumberOfLines = i2;
-        GetTextLabel.attrs.truncateWithEllipses = z7;
-        GetTextLabel.attrs.textAlignment = SystemHAlignment.values()[i3];
-        GetTextLabel.attrs.textColor = fArr;
-        GetTextLabel.attrs.bgColor = fArr2;
-        GetTextLabel.attrs.bgCornerRadius = f3;
-        GetTextLabel.attrs.shadowColor = fArr3;
-        GetTextLabel.attrs.shadowOffset = fArr4;
-        GetTextLabel.pos.f1049x = f4;
-        GetTextLabel.pos.f1050y = f5;
-        GetTextLabel.pos.f1051z = f6;
-        GetTextLabel.pos.f1047h = SystemHAlignment.values()[i4];
-        GetTextLabel.pos.f1048v = SystemVAlignment.values()[i5];
-        GetTextLabel.pos.shrinkBoxToText = z8;
-        GetTextLabel.pos.maxWidth = f7;
-        GetTextLabel.pos.maxHeight = f8;
-        GetTextLabel.pos.padWidth = f9;
-        GetTextLabel.pos.padHeight = f10;
-        GetTextLabel.pos.clipMinX = f11;
-        GetTextLabel.pos.clipMinY = f12;
-        GetTextLabel.pos.clipMaxX = f13;
-        GetTextLabel.pos.clipMaxY = f14;
-        GetTextLabel.pos.clip = z9;
-        GetTextLabel.pos.autoAnchor = z10;
-        GetTextLabel.textId = i6;
-        GetTextLabel.autoFreeTextId = z11;
-        this.m_textLabelManager.AddTextLabel(i);
-    }
-
-    public void AddTextLabel(int i, boolean z, boolean z2, boolean z3, boolean z4, float f, float f2, int i2, boolean z5, int i3, float[] fArr, float[] fArr2, float f3, float[] fArr3, float[] fArr4, float f4, float f5, float f6, int i4, int i5, boolean z6, float f7, float f8, float f9, float f10, float f11, float f12, float f13, float f14, boolean z7, boolean z8, int i6, boolean z9) {
-        TextLabel GetTextLabel = this.m_textLabelManager.GetTextLabel(i);
-        if (GetTextLabel == null) {
-            return;
-        }
-        GetTextLabel.attrs.fontName = "";
-        GetTextLabel.attrs.hasBackground = z;
-        GetTextLabel.attrs.hasShadow = z2;
-        GetTextLabel.attrs.adjustFontSizeToFitWidth = z3;
-        GetTextLabel.attrs.ignoreMarkupOptimization = z4;
-        GetTextLabel.attrs.fontSize = f;
-        GetTextLabel.attrs.scale = f2;
-        GetTextLabel.attrs.maxNumberOfLines = i2;
-        GetTextLabel.attrs.truncateWithEllipses = z5;
-        GetTextLabel.attrs.textAlignment = SystemHAlignment.values()[i3];
-        GetTextLabel.attrs.textColor = fArr;
-        GetTextLabel.attrs.bgColor = fArr2;
-        GetTextLabel.attrs.bgCornerRadius = f3;
-        GetTextLabel.attrs.shadowColor = fArr3;
-        GetTextLabel.attrs.shadowOffset = fArr4;
-        GetTextLabel.pos.f1049x = f4;
-        GetTextLabel.pos.f1050y = f5;
-        GetTextLabel.pos.f1051z = f6;
-        GetTextLabel.pos.f1047h = SystemHAlignment.values()[i4];
-        GetTextLabel.pos.f1048v = SystemVAlignment.values()[i5];
-        GetTextLabel.pos.shrinkBoxToText = z6;
-        GetTextLabel.pos.maxWidth = f7;
-        GetTextLabel.pos.maxHeight = f8;
-        GetTextLabel.pos.padWidth = f9;
-        GetTextLabel.pos.padHeight = f10;
-        GetTextLabel.pos.clipMinX = f11;
-        GetTextLabel.pos.clipMinY = f12;
-        GetTextLabel.pos.clipMaxX = f13;
-        GetTextLabel.pos.clipMaxY = f14;
-        GetTextLabel.pos.clip = z7;
-        GetTextLabel.pos.autoAnchor = z8;
-        GetTextLabel.textId = i6;
-        GetTextLabel.autoFreeTextId = z9;
+        textLabelGetTextLabel.attrs.fontName = "";
+        textLabelGetTextLabel.attrs.hasBackground = z;
+        textLabelGetTextLabel.attrs.hasShadow = z2;
+        textLabelGetTextLabel.attrs.forceBold = z3;
+        textLabelGetTextLabel.attrs.adjustFontSizeToFitWidth = z4;
+        textLabelGetTextLabel.attrs.ignoreMarkupOptimization = z5;
+        textLabelGetTextLabel.attrs.fontSize = f;
+        textLabelGetTextLabel.attrs.scale = f2;
+        textLabelGetTextLabel.attrs.trilinearMinification = z6;
+        textLabelGetTextLabel.attrs.maxNumberOfLines = i2;
+        textLabelGetTextLabel.attrs.truncateWithEllipses = z7;
+        textLabelGetTextLabel.attrs.textAlignment = SystemHAlignment.values()[i3];
+        textLabelGetTextLabel.attrs.textColor = fArr;
+        textLabelGetTextLabel.attrs.bgColor = fArr2;
+        textLabelGetTextLabel.attrs.bgCornerRadius = f3;
+        textLabelGetTextLabel.attrs.shadowColor = fArr3;
+        textLabelGetTextLabel.attrs.shadowOffset = fArr4;
+        textLabelGetTextLabel.pos.x = f4;
+        textLabelGetTextLabel.pos.y = f5;
+        textLabelGetTextLabel.pos.z = f6;
+        textLabelGetTextLabel.pos.h = SystemHAlignment.values()[i4];
+        textLabelGetTextLabel.pos.v = SystemVAlignment.values()[i5];
+        textLabelGetTextLabel.pos.shrinkBoxToText = z8;
+        textLabelGetTextLabel.pos.maxWidth = f7;
+        textLabelGetTextLabel.pos.maxHeight = f8;
+        textLabelGetTextLabel.pos.padWidth = f9;
+        textLabelGetTextLabel.pos.padHeight = f10;
+        textLabelGetTextLabel.pos.clipMinX = f11;
+        textLabelGetTextLabel.pos.clipMinY = f12;
+        textLabelGetTextLabel.pos.clipMaxX = f13;
+        textLabelGetTextLabel.pos.clipMaxY = f14;
+        textLabelGetTextLabel.pos.clip = z9;
+        textLabelGetTextLabel.pos.autoAnchor = z10;
+        textLabelGetTextLabel.textId = i6;
+        textLabelGetTextLabel.autoFreeTextId = z11;
         this.m_textLabelManager.AddTextLabel(i);
     }
 
@@ -1313,125 +1251,46 @@ public class SystemUI_android {
         return this.m_textLabelManager.GetTextLabelUnconstrainedSize(i);
     }
 
-    public void UpdateTextLabel(int i, boolean z, boolean z2, boolean z3, boolean z4, float f, float f2, int i2, int i3, float[] fArr, float[] fArr2, float f3, float[] fArr3, float[] fArr4, float f4, float f5, float f6, int i4, int i5, boolean z5, float f7, float f8, float f9, float f10, float f11, float f12, float f13, float f14, boolean z6, boolean z7) {
-        TextLabelArgs GetTextLabelArgs = this.m_textLabelManager.GetTextLabelArgs();
-        if (GetTextLabelArgs != null) {
-            GetTextLabelArgs.labelId = i;
-            GetTextLabelArgs.attrs.fontName = "";
-            GetTextLabelArgs.attrs.hasBackground = z;
-            GetTextLabelArgs.attrs.hasShadow = z2;
-            GetTextLabelArgs.attrs.adjustFontSizeToFitWidth = z3;
-            GetTextLabelArgs.attrs.ignoreMarkupOptimization = z4;
-            GetTextLabelArgs.attrs.fontSize = f;
-            GetTextLabelArgs.attrs.scale = f2;
-            GetTextLabelArgs.attrs.maxNumberOfLines = i2;
-            GetTextLabelArgs.attrs.textAlignment = SystemHAlignment.values()[i3];
-            GetTextLabelArgs.attrs.textColor = fArr;
-            GetTextLabelArgs.attrs.bgColor = fArr2;
-            GetTextLabelArgs.attrs.bgCornerRadius = f3;
-            GetTextLabelArgs.attrs.shadowColor = fArr3;
-            GetTextLabelArgs.attrs.shadowOffset = fArr4;
-            GetTextLabelArgs.pos.f1049x = f4;
-            GetTextLabelArgs.pos.f1050y = f5;
-            GetTextLabelArgs.pos.f1051z = f6;
-            GetTextLabelArgs.pos.f1047h = SystemHAlignment.values()[i4];
-            GetTextLabelArgs.pos.f1048v = SystemVAlignment.values()[i5];
-            GetTextLabelArgs.pos.shrinkBoxToText = z5;
-            GetTextLabelArgs.pos.maxWidth = f7;
-            GetTextLabelArgs.pos.maxHeight = f8;
-            GetTextLabelArgs.pos.padWidth = f9;
-            GetTextLabelArgs.pos.padHeight = f10;
-            GetTextLabelArgs.pos.clipMinX = f11;
-            GetTextLabelArgs.pos.clipMinY = f12;
-            GetTextLabelArgs.pos.clipMaxX = f13;
-            GetTextLabelArgs.pos.clipMaxY = f14;
-            GetTextLabelArgs.pos.clip = z6;
-            GetTextLabelArgs.pos.autoAnchor = z7;
-            this.m_textLabelManager.UpdateTextLabel(GetTextLabelArgs);
-        }
-    }
-
-    public void UpdateTextLabel(int i, boolean z, boolean z2, boolean z3, boolean z4, float f, float f2, int i2, boolean z5, int i3, float[] fArr, float[] fArr2, float f3, float[] fArr3, float[] fArr4, float f4, float f5, float f6, int i4, int i5, boolean z6, float f7, float f8, float f9, float f10, float f11, float f12, float f13, float f14, boolean z7, boolean z8) {
-        TextLabelArgs GetTextLabelArgs = this.m_textLabelManager.GetTextLabelArgs();
-        if (GetTextLabelArgs == null) {
-            return;
-        }
-        GetTextLabelArgs.labelId = i;
-        GetTextLabelArgs.attrs.fontName = "";
-        GetTextLabelArgs.attrs.hasBackground = z;
-        GetTextLabelArgs.attrs.hasShadow = z2;
-        GetTextLabelArgs.attrs.adjustFontSizeToFitWidth = z3;
-        GetTextLabelArgs.attrs.ignoreMarkupOptimization = z4;
-        GetTextLabelArgs.attrs.fontSize = f;
-        GetTextLabelArgs.attrs.scale = f2;
-        GetTextLabelArgs.attrs.maxNumberOfLines = i2;
-        GetTextLabelArgs.attrs.truncateWithEllipses = z5;
-        GetTextLabelArgs.attrs.textAlignment = SystemHAlignment.values()[i3];
-        GetTextLabelArgs.attrs.textColor = fArr;
-        GetTextLabelArgs.attrs.bgColor = fArr2;
-        GetTextLabelArgs.attrs.bgCornerRadius = f3;
-        GetTextLabelArgs.attrs.shadowColor = fArr3;
-        GetTextLabelArgs.attrs.shadowOffset = fArr4;
-        GetTextLabelArgs.pos.f1049x = f4;
-        GetTextLabelArgs.pos.f1050y = f5;
-        GetTextLabelArgs.pos.f1051z = f6;
-        GetTextLabelArgs.pos.f1047h = SystemHAlignment.values()[i4];
-        GetTextLabelArgs.pos.f1048v = SystemVAlignment.values()[i5];
-        GetTextLabelArgs.pos.shrinkBoxToText = z6;
-        GetTextLabelArgs.pos.maxWidth = f7;
-        GetTextLabelArgs.pos.maxHeight = f8;
-        GetTextLabelArgs.pos.padWidth = f9;
-        GetTextLabelArgs.pos.padHeight = f10;
-        GetTextLabelArgs.pos.clipMinX = f11;
-        GetTextLabelArgs.pos.clipMinY = f12;
-        GetTextLabelArgs.pos.clipMaxX = f13;
-        GetTextLabelArgs.pos.clipMaxY = f14;
-        GetTextLabelArgs.pos.clip = z7;
-        GetTextLabelArgs.pos.autoAnchor = z8;
-        this.m_textLabelManager.UpdateTextLabel(GetTextLabelArgs);
-    }
-
-    //0.28.5
     public void UpdateTextLabel(int i, boolean z, boolean z2, boolean z3, boolean z4, boolean z5, float f, float f2, boolean z6, int i2, boolean z7, int i3, float[] fArr, float[] fArr2, float f3, float[] fArr3, float[] fArr4, float f4, float f5, float f6, int i4, int i5, boolean z8, float f7, float f8, float f9, float f10, float f11, float f12, float f13, float f14, boolean z9, boolean z10) {
-        TextLabelArgs GetTextLabelArgs = this.m_textLabelManager.GetTextLabelArgs();
-        if (GetTextLabelArgs == null) {
+        TextLabelArgs textLabelArgsGetTextLabelArgs = this.m_textLabelManager.GetTextLabelArgs();
+        if (textLabelArgsGetTextLabelArgs == null) {
             return;
         }
-        GetTextLabelArgs.labelId = i;
-        GetTextLabelArgs.attrs.fontName = "";
-        GetTextLabelArgs.attrs.hasBackground = z;
-        GetTextLabelArgs.attrs.hasShadow = z2;
-        GetTextLabelArgs.attrs.forceBold = z3;
-        GetTextLabelArgs.attrs.adjustFontSizeToFitWidth = z4;
-        GetTextLabelArgs.attrs.ignoreMarkupOptimization = z5;
-        GetTextLabelArgs.attrs.fontSize = f;
-        GetTextLabelArgs.attrs.scale = f2;
-        GetTextLabelArgs.attrs.trilinearMinification = z6;
-        GetTextLabelArgs.attrs.maxNumberOfLines = i2;
-        GetTextLabelArgs.attrs.truncateWithEllipses = z7;
-        GetTextLabelArgs.attrs.textAlignment = SystemHAlignment.values()[i3];
-        GetTextLabelArgs.attrs.textColor = fArr;
-        GetTextLabelArgs.attrs.bgColor = fArr2;
-        GetTextLabelArgs.attrs.bgCornerRadius = f3;
-        GetTextLabelArgs.attrs.shadowColor = fArr3;
-        GetTextLabelArgs.attrs.shadowOffset = fArr4;
-        GetTextLabelArgs.pos.f1049x = f4;
-        GetTextLabelArgs.pos.f1050y = f5;
-        GetTextLabelArgs.pos.f1051z = f6;
-        GetTextLabelArgs.pos.f1047h = SystemHAlignment.values()[i4];
-        GetTextLabelArgs.pos.f1048v = SystemVAlignment.values()[i5];
-        GetTextLabelArgs.pos.shrinkBoxToText = z8;
-        GetTextLabelArgs.pos.maxWidth = f7;
-        GetTextLabelArgs.pos.maxHeight = f8;
-        GetTextLabelArgs.pos.padWidth = f9;
-        GetTextLabelArgs.pos.padHeight = f10;
-        GetTextLabelArgs.pos.clipMinX = f11;
-        GetTextLabelArgs.pos.clipMinY = f12;
-        GetTextLabelArgs.pos.clipMaxX = f13;
-        GetTextLabelArgs.pos.clipMaxY = f14;
-        GetTextLabelArgs.pos.clip = z9;
-        GetTextLabelArgs.pos.autoAnchor = z10;
-        this.m_textLabelManager.UpdateTextLabel(GetTextLabelArgs);
+        textLabelArgsGetTextLabelArgs.labelId = i;
+        textLabelArgsGetTextLabelArgs.attrs.fontName = "";
+        textLabelArgsGetTextLabelArgs.attrs.hasBackground = z;
+        textLabelArgsGetTextLabelArgs.attrs.hasShadow = z2;
+        textLabelArgsGetTextLabelArgs.attrs.forceBold = z3;
+        textLabelArgsGetTextLabelArgs.attrs.adjustFontSizeToFitWidth = z4;
+        textLabelArgsGetTextLabelArgs.attrs.ignoreMarkupOptimization = z5;
+        textLabelArgsGetTextLabelArgs.attrs.fontSize = f;
+        textLabelArgsGetTextLabelArgs.attrs.scale = f2;
+        textLabelArgsGetTextLabelArgs.attrs.trilinearMinification = z6;
+        textLabelArgsGetTextLabelArgs.attrs.maxNumberOfLines = i2;
+        textLabelArgsGetTextLabelArgs.attrs.truncateWithEllipses = z7;
+        textLabelArgsGetTextLabelArgs.attrs.textAlignment = SystemHAlignment.values()[i3];
+        textLabelArgsGetTextLabelArgs.attrs.textColor = fArr;
+        textLabelArgsGetTextLabelArgs.attrs.bgColor = fArr2;
+        textLabelArgsGetTextLabelArgs.attrs.bgCornerRadius = f3;
+        textLabelArgsGetTextLabelArgs.attrs.shadowColor = fArr3;
+        textLabelArgsGetTextLabelArgs.attrs.shadowOffset = fArr4;
+        textLabelArgsGetTextLabelArgs.pos.x = f4;
+        textLabelArgsGetTextLabelArgs.pos.y = f5;
+        textLabelArgsGetTextLabelArgs.pos.z = f6;
+        textLabelArgsGetTextLabelArgs.pos.h = SystemHAlignment.values()[i4];
+        textLabelArgsGetTextLabelArgs.pos.v = SystemVAlignment.values()[i5];
+        textLabelArgsGetTextLabelArgs.pos.shrinkBoxToText = z8;
+        textLabelArgsGetTextLabelArgs.pos.maxWidth = f7;
+        textLabelArgsGetTextLabelArgs.pos.maxHeight = f8;
+        textLabelArgsGetTextLabelArgs.pos.padWidth = f9;
+        textLabelArgsGetTextLabelArgs.pos.padHeight = f10;
+        textLabelArgsGetTextLabelArgs.pos.clipMinX = f11;
+        textLabelArgsGetTextLabelArgs.pos.clipMinY = f12;
+        textLabelArgsGetTextLabelArgs.pos.clipMaxX = f13;
+        textLabelArgsGetTextLabelArgs.pos.clipMaxY = f14;
+        textLabelArgsGetTextLabelArgs.pos.clip = z9;
+        textLabelArgsGetTextLabelArgs.pos.autoAnchor = z10;
+        this.m_textLabelManager.UpdateTextLabel(textLabelArgsGetTextLabelArgs);
     }
 
     public void RemoveTextLabel(int i) {
@@ -1440,14 +1299,14 @@ public class SystemUI_android {
 
     public boolean HapticFeedbackSuccess() {
         if (!this.m_usingGamepad && this.m_enableHaptics) {
-            this.m_activity.runOnUiThread(() -> SystemUI_android.this.m_activity.getBrigeView().performHapticFeedback(0));
+            this.m_activity.runOnUiThread(() -> SystemUI_android.this.m_activity.getBridgeView().performHapticFeedback(0));
         }
         return false;
     }
 
     public boolean HapticFeedbackSuccessStrong() {
         if (!this.m_usingGamepad && this.m_enableHaptics) {
-            this.m_activity.runOnUiThread(() -> SystemUI_android.this.m_activity.getBrigeView().performHapticFeedback(0));
+            this.m_activity.runOnUiThread(() -> SystemUI_android.this.m_activity.getBridgeView().performHapticFeedback(0));
         }
         return false;
     }
@@ -1457,7 +1316,7 @@ public class SystemUI_android {
             this.m_activity.runOnUiThread(new Runnable() { // from class: com.tgc.sky.SystemUI_android.21
                 @Override // java.lang.Runnable
                 public void run() {
-                    SystemUI_android.this.m_activity.getBrigeView().performHapticFeedback(1);
+                    SystemUI_android.this.m_activity.getBridgeView().performHapticFeedback(1);
                 }
             });
         }
@@ -1469,7 +1328,7 @@ public class SystemUI_android {
             this.m_activity.runOnUiThread(new Runnable() { // from class: com.tgc.sky.SystemUI_android.22
                 @Override // java.lang.Runnable
                 public void run() {
-                    SystemUI_android.this.m_activity.getBrigeView().performHapticFeedback(4);
+                    SystemUI_android.this.m_activity.getBridgeView().performHapticFeedback(4);
                 }
             });
         }
@@ -1478,28 +1337,28 @@ public class SystemUI_android {
 
     public boolean HapticFeedbackSelection() {
         if (!this.m_usingGamepad && this.m_enableHaptics) {
-            this.m_activity.runOnUiThread(() -> SystemUI_android.this.m_activity.getBrigeView().performHapticFeedback(6));
+            this.m_activity.runOnUiThread(() -> SystemUI_android.this.m_activity.getBridgeView().performHapticFeedback(6));
         }
         return false;
     }
 
     public boolean HapticFeedbackImpactLight() {
         if (!this.m_usingGamepad && this.m_enableHaptics) {
-            this.m_activity.runOnUiThread(() -> SystemUI_android.this.m_activity.getBrigeView().performHapticFeedback(3));
+            this.m_activity.runOnUiThread(() -> SystemUI_android.this.m_activity.getBridgeView().performHapticFeedback(3));
         }
         return false;
     }
 
     public boolean HapticFeedbackImpact() {
         if (!this.m_usingGamepad && this.m_enableHaptics) {
-            this.m_activity.runOnUiThread(() -> SystemUI_android.this.m_activity.getBrigeView().performHapticFeedback(1));
+            this.m_activity.runOnUiThread(() -> SystemUI_android.this.m_activity.getBridgeView().performHapticFeedback(1));
         }
         return false;
     }
 
     public boolean HapticFeedbackImpactHeavy() {
         if (!this.m_usingGamepad && this.m_enableHaptics) {
-            this.m_activity.runOnUiThread(() -> SystemUI_android.this.m_activity.getBrigeView().performHapticFeedback(0));
+            this.m_activity.runOnUiThread(() -> SystemUI_android.this.m_activity.getBridgeView().performHapticFeedback(0));
         }
         return false;
     }
