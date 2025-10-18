@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
@@ -58,19 +59,29 @@ public class MainActivity extends Activity {
     private void loadGame() {
         PackageManager pm = getPackageManager();
         try {
-            PackageInfo info;
-            info = pm.getPackageInfo(SKY_PACKAGE_NAME, PackageManager.GET_SHARED_LIBRARY_FILES);
+            PackageInfo info = pm.getPackageInfo(SKY_PACKAGE_NAME, PackageManager.GET_SHARED_LIBRARY_FILES);
             SMLApplication.skyPName = info.packageName;
             SMLApplication.skyRes = pm.getResourcesForApplication(info.packageName);
             SMLApplication.smlRes = getResources();
             String versionName = info.versionName;
             BuildConfig.SKY_VERSION = versionName.substring(0, versionName.indexOf(' ')).trim();
             BuildConfig.VERSION_CODE = info.versionCode;
+
             String nativeLibraryDir = info.applicationInfo.nativeLibraryDir;
+            String libPath = nativeLibraryDir;
+
+            // Check if nativeLibraryDir is empty or doesn't contain libs (split APK case)
+            File libDir = new File(nativeLibraryDir);
+            if (!libDir.exists() || libDir.listFiles() == null || libDir.listFiles().length == 0) {
+                // Extract from split APK
+                libPath = extractLibrariesFromApk(info.applicationInfo);
+            }
+
             File modsDir = new File(getFilesDir(), "mods");
             File configDir = new File(getFilesDir(), "config");
             if (!configDir.isDirectory() && !configDir.mkdirs()) throw new IOException("Failed to create mod configuration directory");
-            ElfLoader loader = new ElfLoader(nativeLibraryDir + ":/system/lib64");
+
+            ElfLoader loader = new ElfLoader(libPath + ":/system/lib64");
             loader.loadLib("libBootloader.so");
             System.loadLibrary("ciphered");
 
@@ -102,12 +113,11 @@ public class MainActivity extends Activity {
             }
 
             if(sharedPreferences.getBoolean("custom_server", false)){
-
                 BuildConfig.SKY_SERVER_HOSTNAME = sharedPreferences.getString("server_host", BuildConfig.SKY_SERVER_HOSTNAME);
                 MainActivity.customServer(BuildConfig.SKY_SERVER_HOSTNAME);
             }
 
-            new ElfRefcountLoader(nativeLibraryDir + ":/system/lib64", modsDir).load();
+            new ElfRefcountLoader(libPath + ":/system/lib64", modsDir).load();
             BuildConfig.APPLICATION_ID = SKY_PACKAGE_NAME;
             startActivity(new Intent(this, GameActivity.class));
         } catch (PackageManager.NameNotFoundException e) {
@@ -115,6 +125,54 @@ public class MainActivity extends Activity {
         } catch (Throwable e) {
             alertDialog(e);
         }
+    }
+
+    private String extractLibrariesFromApk(ApplicationInfo appInfo) throws IOException {
+        File extractDir = new File(getFilesDir(), "extracted_libs");
+        if (!extractDir.exists() && !extractDir.mkdirs()) {
+            throw new IOException("Failed to create extraction directory");
+        }
+
+        // Find split APK containing native libs
+        String[] splitSourceDirs = appInfo.splitSourceDirs;
+        if (splitSourceDirs != null) {
+            for (String splitApk : splitSourceDirs) {
+                if (splitApk.contains("arm64_v8a") || splitApk.contains("config.arm64")) {
+                    extractLibsFromZip(splitApk, extractDir);
+                    break;
+                }
+            }
+        }
+
+        return extractDir.getAbsolutePath();
+    }
+
+    private void extractLibsFromZip(String apkPath, File destDir) throws IOException {
+        java.util.zip.ZipFile zipFile = new java.util.zip.ZipFile(apkPath);
+        java.util.Enumeration<? extends java.util.zip.ZipEntry> entries = zipFile.entries();
+
+        while (entries.hasMoreElements()) {
+            java.util.zip.ZipEntry entry = entries.nextElement();
+            String name = entry.getName();
+
+            if (name.startsWith("lib/arm64-v8a/") && name.endsWith(".so")) {
+                String libName = name.substring(name.lastIndexOf('/') + 1);
+                File destFile = new File(destDir, libName);
+
+                if (!destFile.exists()) {
+                    try (java.io.InputStream in = zipFile.getInputStream(entry);
+                         java.io.FileOutputStream out = new java.io.FileOutputStream(destFile)) {
+                        byte[] buffer = new byte[8192];
+                        int read;
+                        while ((read = in.read(buffer)) != -1) {
+                            out.write(buffer, 0, read);
+                        }
+                    }
+                    destFile.setExecutable(true);
+                }
+            }
+        }
+        zipFile.close();
     }
 
     @Override
