@@ -5,6 +5,7 @@ on:
     branches: [ "osp-master" ]
   pull_request:
     branches: [ "osp-master" ]
+  workflow_dispatch:
 
 jobs:
   build:
