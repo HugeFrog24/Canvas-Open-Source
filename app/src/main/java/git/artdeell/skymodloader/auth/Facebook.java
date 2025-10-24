@@ -1,11 +1,11 @@
 package git.artdeell.skymodloader.auth;
 
-import android.annotation.SuppressLint;
 import android.app.Dialog;
-import android.app.ProgressDialog;
-import android.content.Context;
+import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.util.Log;
+import android.view.ViewGroup;
+import android.view.Window;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -20,174 +20,243 @@ import com.tgc.sky.accounts.SystemAccountServerInfo;
 import com.tgc.sky.accounts.SystemAccountServerState;
 import com.tgc.sky.accounts.SystemAccountType;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.net.URLEncoder;
 
-public class Facebook implements SystemAccountInterface {
-    /* access modifiers changed from: private */
-    public SystemAccountClientInfo m_accountClientInfo;
-    private SystemAccountServerInfo m_accountServerInfo;
-    /* access modifiers changed from: private */
-    public GameActivity m_activity;
-    /* access modifiers changed from: private */
-    public SystemAccountInterface.UpdateClientInfoCallback m_callback;
-    /* access modifiers changed from: private */
-    private SharedPreferences m_accountStorage;
+/* loaded from: classes.dex */
+public final class Facebook implements SystemAccountInterface {
 
-    public OnPermissionCallback m_permissionCallback;
+    /* renamed from: a, reason: collision with root package name */
+    public SystemAccountClientInfo clientInfo;
 
-    public interface OnPermissionCallback {
-        void onCallback(boolean z, String str);
+    /* renamed from: b, reason: collision with root package name */
+    public SystemAccountServerInfo serverInfo;
+
+    /* renamed from: c, reason: collision with root package name */
+    public GameActivity activity;
+
+    /* renamed from: d, reason: collision with root package name */
+    public SystemAccountInterface.UpdateClientInfoCallback callback;
+
+    /* renamed from: e, reason: collision with root package name */
+    public SharedPreferences accountStorage;
+
+    public static JSONObject doGraphRequest(String str) throws IOException {
+        URLConnection uRLConnectionOpenConnection = new URL("https://graph.fb.gg/v22.0/" + str).openConnection();
+        uRLConnectionOpenConnection.connect();
+        InputStream inputStream = uRLConnectionOpenConnection.getInputStream();
+        try {
+            StringBuilder sb = new StringBuilder();
+            byte[] bArr = new byte[1024];
+            while (true) {
+                int i2 = inputStream.read(bArr);
+                if (i2 == -1) {
+                    JSONObject jSONObject = new JSONObject(sb.toString());
+                    inputStream.close();
+                    return jSONObject;
+                }
+                sb.append(new String(bArr, 0, i2));
+            }
+        } catch (Throwable th) {
+            if (inputStream != null) {
+                try {
+                    inputStream.close();
+                } catch (Throwable th2) {
+                    th.addSuppressed(th2);
+                }
+            }
+//            throw th;
+        }
+        return null;
     }
 
+    @Override // com.tgc.sky.accounts.SystemAccountInterface
+    public final SystemAccountClientInfo GetClientInfo() {
+        return this.clientInfo;
+    }
 
-    public void Initialize(GameActivity gameActivity, SystemAccountInterface.UpdateClientInfoCallback updateClientInfoCallback) {
-        this.m_accountStorage = gameActivity.getSharedPreferences("accounts", Context.MODE_PRIVATE);
-        this.m_activity = gameActivity;
-        this.m_callback = updateClientInfoCallback;
+    @Override // com.tgc.sky.accounts.SystemAccountInterface
+    public final SystemAccountServerInfo GetServerInfo() {
+        return this.serverInfo;
+    }
+
+    @Override // com.tgc.sky.accounts.SystemAccountInterface
+    public final void Initialize(GameActivity gameActivity, SystemAccountInterface.UpdateClientInfoCallback updateClientInfoCallback) {
+        this.accountStorage = gameActivity.getSharedPreferences("accounts", 0);
+        this.activity = gameActivity;
+        this.callback = updateClientInfoCallback;
         SystemAccountClientInfo systemAccountClientInfo = new SystemAccountClientInfo();
-        this.m_accountClientInfo = systemAccountClientInfo;
-        systemAccountClientInfo.accountType = SystemAccountType.kSystemAccountType_Facebook;
-        if(BuildConfig.SKY_SERVER_HOSTNAME.equals("live.radiance.thatgamecompany.com")) {
-            this.m_accountClientInfo.state = SystemAccountClientState.kSystemAccountClientState_SignedOut;
-        } else{
-            this.m_accountClientInfo.state = SystemAccountClientState.kSystemAccountClientState_NotAvailable;
+        this.clientInfo = systemAccountClientInfo;
+        SystemAccountType systemAccountType = SystemAccountType.kSystemAccountType_Facebook;
+        systemAccountClientInfo.accountType = systemAccountType;
+        if (BuildConfig.SKY_SERVER_HOSTNAME.equals("live.radiance.thatgamecompany.com")) {
+            this.clientInfo.state = SystemAccountClientState.kSystemAccountClientState_SignedOut;
+        } else {
+            this.clientInfo.state = SystemAccountClientState.kSystemAccountClientState_NotAvailable;
         }
         SystemAccountServerInfo systemAccountServerInfo = new SystemAccountServerInfo();
-        this.m_accountServerInfo = systemAccountServerInfo;
-        systemAccountServerInfo.type = SystemAccountType.kSystemAccountType_Facebook;
-        this.m_accountServerInfo.state = SystemAccountServerState.kSystemAccountServerState_UnLinked;
+        this.serverInfo = systemAccountServerInfo;
+        systemAccountServerInfo.type = systemAccountType;
+        systemAccountServerInfo.state = SystemAccountServerState.kSystemAccountServerState_UnLinked;
     }
 
-    public SystemAccountClientInfo GetClientInfo() {
-        return this.m_accountClientInfo;
-    }
-
-    public SystemAccountServerInfo GetServerInfo() {
-        return this.m_accountServerInfo;
-    }
-
-    public void SignIn() {
-        Log.i("FacebookAuth","Called SignIn()");
-        if(!m_accountStorage.contains("facebookToken")) {
-            authenticate();
-            return;
-        }
-        new Thread(()->{
-            if(graphAuthorize(m_accountStorage.getString("facebookToken", ""))) {
-                authenticate();
-            }
-        }).start();
-        Log.i("FacebookAuth","Call Over!");
-    }
-
-    public void SignOut() {
-        m_accountStorage.edit().remove("facebookToken").apply();
-        m_accountClientInfo.state = SystemAccountClientState.kSystemAccountClientState_SignedOut;
-        m_callback.UpdateClientInfo(m_accountClientInfo);
-    }
-
-    public void RefreshCredentials(final SystemAccountClientRequestState systemAccountClientRequestState) {
+    @Override // com.tgc.sky.accounts.SystemAccountInterface
+    public final void RefreshCredentials(SystemAccountClientRequestState systemAccountClientRequestState) {
         SignIn();
     }
 
+    @Override // com.tgc.sky.accounts.SystemAccountInterface
+    public final void SignIn() {
+        Log.i("FacebookAuth", "Called SignIn()");
+        if (!this.accountStorage.contains("facebookToken")) {
+            this.activity.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    authenticate();
+                }
+            });
+        } else {
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    if (graphAuthorize(accountStorage.getString("facebookToken", ""))) {
+                        activity.runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                authenticate();
+                            }
+                        });
+                    }
+                }
+            }).start();
+            Log.i("FacebookAuth", "Call Over!");
+        }
+    }
+
+    @Override // com.tgc.sky.accounts.SystemAccountInterface
+    public final void SignOut() {
+        this.accountStorage.edit().remove("facebookToken").apply();
+        SystemAccountClientInfo systemAccountClientInfo = this.clientInfo;
+        systemAccountClientInfo.state = SystemAccountClientState.kSystemAccountClientState_SignedOut;
+        this.callback.UpdateClientInfo(systemAccountClientInfo);
+    }
+
+    public final boolean graphAuthorize(String str) {
+        try {
+            JSONObject jSONObjectA = doGraphRequest("me?field=name&access_token=" + str);
+            this.clientInfo.accountId = jSONObjectA.getString("id");
+            this.clientInfo.alias = jSONObjectA.getString("name");
+            SystemAccountClientInfo systemAccountClientInfo = this.clientInfo;
+            systemAccountClientInfo.signature = str;
+            systemAccountClientInfo.state = SystemAccountClientState.kSystemAccountClientState_SignedIn;
+            this.accountStorage.edit().putString("facebookToken", str).commit();
+            this.callback.UpdateClientInfo(this.clientInfo);
+            Log.i("FacebookAuth", "graphAuthorize done");
+            return true;
+        } catch (Exception e7) {
+            e7.printStackTrace();
+            return false;
+        }
+    }
+
+    private void authenticate() {
+        Log.i("FacebookAuth", "Starting authentication...");
+        Dialog dialog = new Dialog(this.activity);
+        dialog.requestWindowFeature(1);
+        dialog.setCancelable(true);
+        WebView webView = new WebView(this.activity);
+        webView.getSettings().setJavaScriptEnabled(true);
+        webView.setLayoutParams(new ViewGroup.LayoutParams(-1, -1));
+        dialog.setContentView(webView);
+        final boolean[] dismissed = {true};
+        dialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
+            @Override
+            public void onDismiss(DialogInterface dialogInterface) {
+                if (dismissed[0]) {
+                    SystemAccountClientInfo systemAccountClientInfo = clientInfo;
+                    systemAccountClientInfo.state = SystemAccountClientState.kSystemAccountClientState_SignedOut;
+                    callback.UpdateClientInfo(systemAccountClientInfo);
+                }
+            }
+        });
+        dialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+            @Override
+            public void onCancel(DialogInterface dialogInterface) {
+                SystemAccountClientInfo systemAccountClientInfo = clientInfo;
+                systemAccountClientInfo.state = SystemAccountClientState.kSystemAccountClientState_SignedOut;
+                callback.UpdateClientInfo(systemAccountClientInfo);
+            }
+        });
+        String redirectUri = "https://" + BuildConfig.SKY_SERVER_HOSTNAME + "/account/auth/oauth_redirect";
+        try {
+            String oauthUrl = "https://www.facebook.com/v22.0/dialog/oauth?client_id=293746044767069&redirect_uri=" + URLEncoder.encode(redirectUri, "UTF-8") + "&scope=public_profile,user_friends&response_type=token";
+            Log.i("FacebookAuth", "Loading URL: " + oauthUrl);
+            webView.loadUrl(oauthUrl);
+            webView.setWebViewClient(new WebViewClient() {
+                @Override
+                public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+                    String url = request.getUrl().toString();
+                    if (url.startsWith(redirectUri)) {
+                        final String tok = "access_token=";
+                        int accessTokenIndex = url.indexOf(tok);
+                        if (accessTokenIndex == -1) {
+                            clientInfo.state = SystemAccountClientState.kSystemAccountClientState_SignedOut;
+                            callback.UpdateClientInfo(clientInfo);
+                            dismissed[0] = false;
+                            dialog.dismiss();
+                            return true;
+                        }
+                        int ampersandIndex = url.indexOf('&', accessTokenIndex);
+                        final String token;
+                        if (ampersandIndex != -1) {
+                            token = url.substring(accessTokenIndex + tok.length(), ampersandIndex);
+                        } else {
+                            token = url.substring(accessTokenIndex + tok.length());
+                        }
+                        new Thread(new Runnable() {
+                            @Override
+                            public void run() {
+                                if (graphAuthorize(token)) {
+                                    dismissed[0] = false;
+                                }
+                                activity.runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        dialog.dismiss();
+                                    }
+                                });
+                            }
+                        }).start();
+                        return true;
+                    }
+                    return false;
+                }
+            });
+            dialog.show();
+            Window window = dialog.getWindow();
+            if (window != null) {
+                window.setLayout(-1, -1);
+            }
+        } catch (UnsupportedEncodingException e7) {
+            Log.e("FacebookAuth", "Encoding error: " + e7.getMessage());
+        }
+    }
+
     public boolean HasAppFriendsPermission() {
-        return this.m_accountClientInfo.permissions != null && this.m_accountClientInfo.permissions.contains("user_friends");
+        return this.clientInfo.permissions != null && this.clientInfo.permissions.contains("user_friends");
     }
 
     public boolean GetAppFriendsPermission(OnPermissionCallback onPermissionCallback) {
         return false;
     }
 
-
-    private void authenticate() {
-        m_activity.runOnUiThread(()->{
-            Log.i("FacebookAuth","Beginning authentification...");
-            final Dialog dialog = new Dialog(this.m_activity);
-            WebView webView = new WebView(this.m_activity);
-            dialog.setContentView(webView);
-            webView.loadUrl("https://m.facebook.com/login.php?" +
-                    "skip_api_login=1&" +
-                    "api_key=293746044767069&" +
-                    "app_id=293746044767069&" +
-                    "signed_next=1&" +
-                    "next=https%3A%2F%2Fm.facebook.com%2Fv6.0%2Fdialog%2Foauth%3Fclient_id%3D293746044767069%26cbt%3D1628350401972%26e2e%3D%257B%2522init%2522%253A1628350401972%257D%26ies%3D0%26sdk%3Dandroid-6.5.1%26scope%3Dpublic_profile%252Cuser_friends%26state%3D%257B%25220_auth_logger_id%2522%253A%2522a71242a5-8fa3-40ce-b310-fc5d0d6d5040%2522%252C%25223_method%2522%253A%2522web_view%2522%257D%26default_audience%3Dfriends%26login_behavior%3DNATIVE_WITH_FALLBACK%26redirect_uri%3Dfbconnect%253A%252F%252Fsuccess%26auth_type%3Drerequest%26display%3Dtouch%26response_type%3Dtoken%252Csigned_request%252Cgraph_domain%26return_scopes%3Dtrue%26ret%3Dlogin%26fbapp_pres%3D0%26logger_id%3Da71242a5-8fa3-40ce-b310-fc5d0d6d5040%26tp%3Dunspecified" +
-                    "&cancel_url=fbconnect%3A%2F%2Fsuccess%3Ferror%3Daccess_denied%26error_code%3D200%26error_description%3DPermissions%2Berror%26error_reason%3Duser_denied%26state%3D%257B%25220_auth_logger_id%2522%253A%2522a71242a5-8fa3-40ce-b310-fc5d0d6d5040%2522%252C%25223_method%2522%253A%2522web_view%2522%257D" +
-                    "&display=touch");
-            webView.setWebViewClient(new WebViewClient() {
-                @Override
-                public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
-                    if(request.getUrl().getScheme().equals("fbconnect")) {
-                        String url = request.getUrl().toString();
-                        final String tok = "access_token=";
-                        int accessTokenIndex = url.indexOf(tok);
-                        if(accessTokenIndex == -1) {
-                            m_accountClientInfo.state = SystemAccountClientState.kSystemAccountClientState_SignedOut;
-                            m_callback.UpdateClientInfo(m_accountClientInfo);
-                            return true;
-                        }
-                        final String token = url.substring(accessTokenIndex + tok.length(), url.indexOf('&',accessTokenIndex));
-                        m_activity.runOnUiThread(()->{
-                            dialog.dismiss();
-                            ProgressDialog progressDialog = new ProgressDialog(m_activity);
-                            progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-                            progressDialog.setIndeterminate(true);
-                            progressDialog.show();
-                            new Thread(()->{
-                                if(graphAuthorize(token)) {
-                                    m_accountClientInfo.state = SystemAccountClientState.kSystemAccountClientState_SignedOut;
-                                    m_callback.UpdateClientInfo(m_accountClientInfo);
-                                }
-                                m_activity.runOnUiThread(progressDialog::dismiss);
-                            }).start();
-                        });
-                    }
-                    return false;
-                }
-            });
-            dialog.setTitle("Facebook Signin");
-            dialog.setCancelable(true);
-            dialog.setOnCancelListener((d)->{
-                m_accountClientInfo.state = SystemAccountClientState.kSystemAccountClientState_SignedOut;
-                m_callback.UpdateClientInfo(m_accountClientInfo);
-            });
-            dialog.show();
-        });
-    }
-    @SuppressLint("ApplySharedPref")
-    private boolean graphAuthorize(String token) {
-        try {
-            JSONObject resp = doGraphRequest("me?field=name&access_token="+token);
-            m_accountClientInfo.accountId = resp.getString("id");
-            m_accountClientInfo.alias = resp.getString("name");
-            m_accountClientInfo.signature = token;
-            m_accountClientInfo.state = SystemAccountClientState.kSystemAccountClientState_SignedIn;
-            m_accountStorage.edit().putString("facebookToken",token).commit();
-            m_callback.UpdateClientInfo(m_accountClientInfo);
-            Log.i("FacebookAuth","graphAuthorize done");
-            return false;
-        }catch (Exception e) {
-            e.printStackTrace();
-            return true;
-        }
-    }
-
-    private static JSONObject doGraphRequest(String call) throws IOException, JSONException {
-        URLConnection connection = new URL("https://graph.fb.gg/v17.0/"+call).openConnection();
-        connection.connect();
-        try (InputStream rd = connection.getInputStream()) {
-            StringBuilder ret = new StringBuilder();
-            int cpt;
-            byte[] buf = new byte[1024];
-            while ((cpt = rd.read(buf)) != -1) {
-                ret.append(new String(buf, 0, cpt));
-            }
-            return new JSONObject(ret.toString());
-        }
+    public interface OnPermissionCallback {
+        void onCallback(boolean z, String str);
     }
 }
