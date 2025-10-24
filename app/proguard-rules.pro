@@ -19,3 +19,30 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# Keep classes and methods called from native code (JNI)
+-keepclasseswithmembernames,includedescriptorclasses class * {
+    native <methods>;
+}
+
+# Keep all skymodloader classes that might be accessed from native code
+-keep class git.artdeell.skymodloader.** { *; }
+
+# Keep all TGC Sky classes (game classes accessed by native code)
+-keep class com.tgc.sky.** { *; }
+
+# Keep FileSelector class and its methods (called from native code)
+-keep class git.artdeell.skymodloader.FileSelector {
+    *;
+}
+
+# Keep MainActivity native methods
+-keep class git.artdeell.skymodloader.MainActivity {
+    *;
+}
+
+# Keep all FMOD classes (used by native libraries)
+-keep class org.fmod.** { *; }
+
+# Keep all attributes for reflection
+-keepattributes *Annotation*,Signature,Exception,InnerClasses,EnclosingMethod

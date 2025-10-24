@@ -1,6 +1,5 @@
 package git.artdeell.skymodloader;
 
-
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -41,7 +40,6 @@ public class MainActivity extends Activity {
 
     public static DeviceInfo deviceInfo;
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -79,20 +77,59 @@ public class MainActivity extends Activity {
 
             File modsDir = new File(getFilesDir(), "mods");
             File configDir = new File(getFilesDir(), "config");
-            if (!configDir.isDirectory() && !configDir.mkdirs()) throw new IOException("Failed to create mod configuration directory");
+            if (!configDir.isDirectory() && !configDir.mkdirs())
+                throw new IOException("Failed to create mod configuration directory");
+
+            android.util.Log.i("MainActivity", "Pre-loading FMOD dependencies from: " + libPath);
+
+            org.fmod.FMOD.init(this);
+
+            File fmodLibDir = new File(libPath);
+
+            android.util.Log.i("MainActivity", "Listing all files in: " + libPath);
+            File[] allFiles = fmodLibDir.listFiles();
+            if (allFiles != null) {
+                for (File f : allFiles) {
+                    android.util.Log.i("MainActivity", "Found file: " + f.getName());
+                }
+            } else {
+                android.util.Log.e("MainActivity", "Directory is empty or doesn't exist!");
+            }
+
+            String[] libsToLoad = {
+                    "libc++_shared.so",
+                    "libOpenSLES.so",
+                    "libfmod.so",
+                    "libfmodstudio.so"
+            };
+
+            for (String libName : libsToLoad) {
+                File lib = new File(fmodLibDir, libName);
+                if (lib.exists()) {
+                    try {
+                        android.util.Log.i("MainActivity", "Loading: " + libName);
+                        System.load(lib.getAbsolutePath());
+                        android.util.Log.i("MainActivity", "Successfully loaded: " + libName);
+                    } catch (Throwable e) {
+                        android.util.Log.e("MainActivity", "Failed to load " + libName + ": " + e.getMessage());
+                        e.printStackTrace();
+                    }
+                } else {
+                    android.util.Log.w("MainActivity", "Not found: " + libName + " at " + lib.getAbsolutePath());
+                }
+            }
 
             ElfLoader loader = new ElfLoader(libPath + ":/system/lib64");
             loader.loadLib("libBootloader.so");
             System.loadLibrary("ciphered");
 
             setDeviceInfoNative(
-                deviceInfo.xdpi,
-                deviceInfo.ydpi,
-                deviceInfo.density,
-                Optional.ofNullable(deviceInfo.deviceName).orElse(""),
-                Optional.ofNullable(deviceInfo.deviceManufacturer).orElse(""),
-                Optional.ofNullable(deviceInfo.deviceModel).orElse("")
-            );
+                    deviceInfo.xdpi,
+                    deviceInfo.ydpi,
+                    deviceInfo.density,
+                    Optional.ofNullable(deviceInfo.deviceName).orElse(""),
+                    Optional.ofNullable(deviceInfo.deviceManufacturer).orElse(""),
+                    Optional.ofNullable(deviceInfo.deviceModel).orElse(""));
 
             IconLoader.findIcons();
             BuildConfig.VERSION_CODE = sharedPreferences.getBoolean("skip_updates", false) ? 0x99999 : info.versionCode;
@@ -102,8 +139,7 @@ public class MainActivity extends Activity {
                     gameType == null ? 0 : gameType,
                     BuildConfig.SKY_SERVER_HOSTNAME,
                     configDir.getAbsolutePath(),
-                    SMLApplication.skyRes.getAssets()
-            );
+                    SMLApplication.skyRes.getAssets());
 
             if (SKY_PACKAGE_NAME.equals("com.tgc.sky.android.test.gold")) {
                 SKY_PACKAGE_NAME = "com.tgc.sky.android.test.";
@@ -112,8 +148,9 @@ public class MainActivity extends Activity {
                 BuildConfig.SKY_STAGE_NAME = "Test";
             }
 
-            if(sharedPreferences.getBoolean("custom_server", false)){
-                BuildConfig.SKY_SERVER_HOSTNAME = sharedPreferences.getString("server_host", BuildConfig.SKY_SERVER_HOSTNAME);
+            if (sharedPreferences.getBoolean("custom_server", false)) {
+                BuildConfig.SKY_SERVER_HOSTNAME = sharedPreferences.getString("server_host",
+                        BuildConfig.SKY_SERVER_HOSTNAME);
                 MainActivity.customServer(BuildConfig.SKY_SERVER_HOSTNAME);
             }
 
@@ -133,24 +170,35 @@ public class MainActivity extends Activity {
             throw new IOException("Failed to create extraction directory");
         }
 
+        android.util.Log.i("MainActivity", "Looking for split APKs...");
+        android.util.Log.i("MainActivity", "sourceDir: " + appInfo.sourceDir);
+
         // Find split APK containing native libs
         String[] splitSourceDirs = appInfo.splitSourceDirs;
         if (splitSourceDirs != null) {
+            android.util.Log.i("MainActivity", "Found " + splitSourceDirs.length + " split APKs");
             for (String splitApk : splitSourceDirs) {
-                if (splitApk.contains("arm64_v8a") || splitApk.contains("config.arm64")) {
+                android.util.Log.i("MainActivity", "Checking split APK: " + splitApk);
+                if (splitApk.contains("arm64_v8a") || splitApk.contains("config.arm64") || splitApk.contains("arm64")) {
+                    android.util.Log.i("MainActivity", "Found ARM64 split APK: " + splitApk);
                     extractLibsFromZip(splitApk, extractDir);
                     break;
                 }
             }
+        } else {
+            android.util.Log.w("MainActivity", "No split APKs found, trying base APK");
+            extractLibsFromZip(appInfo.sourceDir, extractDir);
         }
 
         return extractDir.getAbsolutePath();
     }
 
     private void extractLibsFromZip(String apkPath, File destDir) throws IOException {
+        android.util.Log.i("MainActivity", "Extracting libs from: " + apkPath);
         java.util.zip.ZipFile zipFile = new java.util.zip.ZipFile(apkPath);
         java.util.Enumeration<? extends java.util.zip.ZipEntry> entries = zipFile.entries();
 
+        int libCount = 0;
         while (entries.hasMoreElements()) {
             java.util.zip.ZipEntry entry = entries.nextElement();
             String name = entry.getName();
@@ -161,7 +209,7 @@ public class MainActivity extends Activity {
 
                 if (!destFile.exists()) {
                     try (java.io.InputStream in = zipFile.getInputStream(entry);
-                         java.io.FileOutputStream out = new java.io.FileOutputStream(destFile)) {
+                            java.io.FileOutputStream out = new java.io.FileOutputStream(destFile)) {
                         byte[] buffer = new byte[8192];
                         int read;
                         while ((read = in.read(buffer)) != -1) {
@@ -169,10 +217,16 @@ public class MainActivity extends Activity {
                         }
                     }
                     destFile.setExecutable(true);
+                    destFile.setReadable(true);
+                    libCount++;
+                    android.util.Log.i("MainActivity", "Extracted: " + libName);
+                } else {
+                    android.util.Log.d("MainActivity", "Already exists: " + libName);
                 }
             }
         }
         zipFile.close();
+        android.util.Log.i("MainActivity", "Extracted " + libCount + " libraries");
     }
 
     @Override
@@ -189,7 +243,6 @@ public class MainActivity extends Activity {
 
         AlertDialog dialog = getAlertDialog(stackTrace);
 
-        // Get the neutral button and override its behavior (to ensure it doesn't dismiss)
         dialog.getButton(AlertDialog.BUTTON_NEUTRAL).setOnClickListener(v -> {
             copyToClipboard(stackTrace);
         });
@@ -202,7 +255,8 @@ public class MainActivity extends Activity {
         // Existing OK button to dismiss the dialog
         builder.setPositiveButton(android.R.string.ok, (d, w) -> finish());
 
-        // Show the dialog without setting neutral button here, so it doesn't close by default
+        // Show the dialog without setting neutral button here, so it doesn't close by
+        // default
         AlertDialog dialog = builder.create();
 
         // Add the "Copy" button manually after creating the dialog
@@ -244,18 +298,26 @@ public class MainActivity extends Activity {
         if (deviceInfo.deviceName == null || deviceInfo.deviceName.isEmpty()) {
             deviceInfo.deviceName = Settings.Secure.getString(getContentResolver(), "bluetooth_name");
         }
-        deviceInfo.deviceName = (deviceInfo.deviceName == null || deviceInfo.deviceName.isEmpty()) ? "NO_DEVICE_NAME" : deviceInfo.deviceName;
+        deviceInfo.deviceName = (deviceInfo.deviceName == null || deviceInfo.deviceName.isEmpty()) ? "NO_DEVICE_NAME"
+                : deviceInfo.deviceName;
 
         deviceInfo.deviceManufacturer = Build.MANUFACTURER;
         deviceInfo.deviceModel = Build.MODEL;
         return deviceInfo;
     }
 
-    public static native void settle(int _gameVersion, int _gameType, String _hostName, String _configDir, AssetManager _gameAssets);
-    public static native void setDeviceInfoNative(float _xdpi, float _ydpi, float _density, String _deviceName, String _manufacturer, String _model);
+    public static native void settle(int _gameVersion, int _gameType, String _hostName, String _configDir,
+            AssetManager _gameAssets);
+
+    public static native void setDeviceInfoNative(float _xdpi, float _ydpi, float _density, String _deviceName,
+            String _manufacturer, String _model);
+
     public static native void onKeyboardCompleteNative(String message);
+
     public static native void customServer(String url);
+
     public static native void lateInitUserLibs();
+
     public static native void getSysetemUI(Object systemUI);
 
 }
