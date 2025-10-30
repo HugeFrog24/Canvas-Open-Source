@@ -1,10 +1,10 @@
 package git.artdeell.skymodloader.auth;
 
-import static git.artdeell.skymodloader.MainActivity.SKY_PACKAGE_NAME;
-
 import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.os.Handler;
+import android.os.Looper;
+import android.view.Window;
 import android.view.WindowManager;
 import android.webkit.CookieManager;
 import android.webkit.WebResourceRequest;
@@ -31,11 +31,10 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 
 
-public class WebLogin extends WebViewClient implements SystemAccountInterface, Runnable {
+public class WebLogin extends WebViewClient implements SystemAccountInterface {
     private  SystemAccountType accountType;
     private String loginUrl;
     private final String redirectUrl;
-    private final Handler windowRestoreHandler = new Handler();
     private Dialog dialog;
     private WebView webView;
     private SystemAccountClientInfo m_accountClientInfo;
@@ -43,10 +42,15 @@ public class WebLogin extends WebViewClient implements SystemAccountInterface, R
     private GameActivity m_activity;
     private SystemAccountInterface.UpdateClientInfoCallback m_callback;
 
-    public WebLogin(String webLoginType, SystemAccountType systemAccountType) {
+    public WebLogin(String webLoginType, String token, SystemAccountType systemAccountType) {
         this.accountType = systemAccountType;
-        loginUrl = String.format("https://%s/account/auth/oauth_signin?type=%s&token=", BuildConfig.SKY_SERVER_HOSTNAME, webLoginType);
+        if(token == null) token = "";
+        loginUrl = String.format("https://%s/account/auth/oauth_signin?type=%s&token=%s", BuildConfig.SKY_SERVER_HOSTNAME, webLoginType, token);
         redirectUrl = String.format("https://%s/account/auth/oauth_redirect", BuildConfig.SKY_SERVER_HOSTNAME);
+    }
+
+    public WebLogin(String webLoginType, SystemAccountType systemAccountType) {
+        this(webLoginType, null, systemAccountType);
     }
 
     @Override
@@ -124,6 +128,11 @@ public class WebLogin extends WebViewClient implements SystemAccountInterface, R
         //webView.setInitialScale(110);
         webView.loadUrl(loginUrl);
         startWatching();
+        dialog.show();
+        Window dialogWindow = dialog.getWindow();
+        if(dialogWindow != null) {
+            dialogWindow.clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND);
+        }
     }
 
 
@@ -176,17 +185,27 @@ public class WebLogin extends WebViewClient implements SystemAccountInterface, R
     }
 
     public void startWatching() {
-        windowRestoreHandler.postDelayed(this, 0);
+        new WindowSizeRunnable().startWatching();
     }
 
-    @Override
-    public void run() {
-        windowRestoreHandler.removeCallbacks(this);
-        if(webView.getContentHeight() > 20) {
-            dialog.show();
-            dialog.getWindow().setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.MATCH_PARENT);
-        }else{
-            windowRestoreHandler.postDelayed(this, 250);
+    private void showWebView() {
+        Window dialogWindow = dialog.getWindow();
+        if(dialogWindow != null) {
+            dialogWindow.setFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND, WindowManager.LayoutParams.FLAG_DIM_BEHIND);
+            dialogWindow.setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.MATCH_PARENT);
+        }
+
+    }
+
+    private class WindowSizeRunnable implements Runnable {
+        private final Handler mWindowRestoreHandler = new Handler(Looper.getMainLooper());
+        @Override
+        public void run() {
+            if(webView.getContentHeight() > 20) showWebView();
+            else mWindowRestoreHandler.postDelayed(this, 250);
+        }
+        public void startWatching() {
+            mWindowRestoreHandler.postDelayed(this, 0);
         }
     }
 }
