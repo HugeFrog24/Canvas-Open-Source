@@ -36,13 +36,50 @@
     *;
 }
 
-# Keep MainActivity native methods
+# Keep MainActivity and all its methods (called from native code)
 -keep class git.artdeell.skymodloader.MainActivity {
+    *;
+}
+
+# Keep DialogJNI and its methods (called from native code)
+-keep class git.artdeell.skymodloader.DialogJNI {
+    *;
+}
+
+# Keep ImGUI and its methods (called from native code)
+-keep class git.artdeell.skymodloader.ImGUI {
+    *;
+}
+
+# Keep LibrarySelectorListener and its methods (called from native code)
+-keep class git.artdeell.skymodloader.LibrarySelectorListener {
+    *;
+}
+
+# Keep iconloader classes (called from native code)
+-keep class git.artdeell.skymodloader.iconloader.** {
     *;
 }
 
 # Keep all FMOD classes (used by native libraries)
 -keep class org.fmod.** { *; }
 
+# Keep DeviceInfo class (used by MainActivity)
+-keep class git.artdeell.skymodloader.DeviceInfo {
+    *;
+}
+
+# Keep ElfLoader classes (used by native library loading)
+-keep class git.artdeell.skymodloader.elfmod.ElfLoader {
+    *;
+}
+-keep class git.artdeell.skymodloader.elfmod.ElfRefcountLoader {
+    *;
+}
+
 # Keep all attributes for reflection
 -keepattributes *Annotation*,Signature,Exception,InnerClasses,EnclosingMethod
+
+# Keep BuildConfig (used throughout the app)
+-keep class git.artdeell.skymodloader.BuildConfig { *; }
+-keep class com.tgc.sky.BuildConfig { *; }
