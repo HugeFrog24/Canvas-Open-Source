@@ -13,6 +13,7 @@ import android.graphics.Rect;
 import android.graphics.RectF;
 import android.hardware.display.DisplayManager;
 import android.hardware.input.InputManager;
+import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Build;
@@ -43,6 +44,8 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import com.tgc.sky.io.AudioDeviceType;
 import com.tgc.sky.ui.panels.BasePanel;
 import com.tgc.sky.ui.Utils;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Timer;
@@ -72,7 +75,6 @@ public class GameActivity extends TGCNativeActivity {
     private PermissionCallback mPermissionCallback = null;
     private ArrayList<BasePanel> mActivePanels = new ArrayList<>();
     private ImageView logoView;
-    private LoadVideoView videoLogo;
     private MediaPlayer m_mediaPlayer;
     private int m_nativeHeight;
     private int m_nativeWidth;
@@ -223,7 +225,7 @@ public class GameActivity extends TGCNativeActivity {
                 WindowManager.LayoutParams layoutParams = new WindowManager.LayoutParams();
                 layoutParams.width = 2;
                 layoutParams.height = 2;
-                layoutParams.flags = 1064;
+                layoutParams.flags = WindowManager.LayoutParams.FLAG_FULLSCREEN | WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL | WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
                 layoutParams.format = PixelFormat.RGBA_8888;
                 layoutParams.gravity = Gravity.BOTTOM;
                 ((WindowManager) getSystemService(Context.WINDOW_SERVICE)).addView(view, layoutParams);
@@ -260,9 +262,7 @@ public class GameActivity extends TGCNativeActivity {
         git.artdeell.skymodloader.MainActivity.getSysetemUI(this.m_systemUI);
         onCreateNative();
         initGameController();
-        //logoView = findViewById(R.id.imageView);
-        videoLogo = findViewById(R.id.vidLogo);
-        playVideoLogo();
+        logoView = findViewById(R.id.imageView);
         Intent intent = getIntent();
         if (intent != null) {
             HandleNewIntent(intent);
@@ -1048,10 +1048,8 @@ public class GameActivity extends TGCNativeActivity {
         return bArr;
     }
 
-
-
     public void playLogoSound() {
-        /*AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         if(audioManager.isMusicActive()) return;
         MediaPlayer player = new MediaPlayer();
         try {
@@ -1060,11 +1058,11 @@ public class GameActivity extends TGCNativeActivity {
             (m_mediaPlayer = player).start();
         }catch (IOException e) {
             e.printStackTrace();
-        }*/
+        }
     }
 
     public boolean tryReleaseLogoSound() {
-      /*  if(m_mediaPlayer == null) {
+       if(m_mediaPlayer == null) {
             this.m_logoSoundReleased = true;
             return true;
         }
@@ -1074,36 +1072,10 @@ public class GameActivity extends TGCNativeActivity {
             }
             this.m_mediaPlayer.release();
             this.m_logoSoundReleased = true;
-        }*/
+        }
         return true;
     }
 
-    private void playVideoLogo() {
-        String uri = "android.resource://" + getPackageName() + "/" + R.raw.vid_logo;
-        videoLogo.setVideoURI(Uri.parse(uri));
-        videoLogo.start();
-        videoLogo.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-
-
-            @Override
-            public void onPrepared(MediaPlayer mp) {
-                mp.start();
-                mp.setLooping(false);
-
-
-            }
-        });
-
-
-        videoLogo.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-
-
-            @Override
-            public void onCompletion(MediaPlayer mp) {
-               // videoLogo.setVisibility(View.GONE);
-            }
-        });
-    }
     public void fadeoutLogos() {
         runOnUiThread(()->{
             AlphaAnimation alphaAnimation = new AlphaAnimation(1.0f, 0.0f);
@@ -1117,7 +1089,7 @@ public class GameActivity extends TGCNativeActivity {
 
                 @Override
                 public void onAnimationEnd(Animation animation) {
-                    videoLogo.setVisibility(View.GONE);
+                    logoView.setVisibility(View.GONE);
                     // TODO: Don't remove!
                     git.artdeell.skymodloader.MainActivity.lateInitUserLibs();
                 }
@@ -1127,7 +1099,7 @@ public class GameActivity extends TGCNativeActivity {
 
                 }
             });
-            videoLogo.startAnimation(alphaAnimation);
+            logoView.startAnimation(alphaAnimation);
         });
     }
 
