@@ -13,7 +13,7 @@ public class CanvasUpdaterService extends AbstractUpdaterService {
 
     @Override
     protected String getUpdateCheckerURL() {
-        return "https://api.github.com/repos/RomanChamelo/Canvas-Open-Source/releases/latest";
+        return "https://api.github.com/repos/skyprotocol/canvas-distribution/releases/latest";
     }
 
     @Override
