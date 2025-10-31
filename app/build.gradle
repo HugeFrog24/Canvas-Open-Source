@@ -9,6 +9,16 @@ android {
             useLegacyPackaging true
         }
     }
+
+    signingConfigs {
+        release {
+            storeFile file("canvas-distribution.jks")
+            storePassword System.getenv("DIST_KS_PASSWORD")
+            keyAlias "key0"
+            keyPassword System.getenv("DIST_KS_PASSWORD")
+        }
+    }
+
     defaultConfig {
         applicationId "git.artdeell.skymodloader"
         minSdk 26
