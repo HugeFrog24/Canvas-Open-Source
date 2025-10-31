@@ -2,8 +2,6 @@ package git.artdeell.skymodloader.auth;
 
 import android.annotation.SuppressLint;
 import android.app.Dialog;
-import android.os.Handler;
-import android.os.Looper;
 import android.view.Window;
 import android.view.WindowManager;
 import android.webkit.CookieManager;
@@ -32,8 +30,8 @@ import java.nio.charset.StandardCharsets;
 
 
 public class WebLogin extends WebViewClient implements SystemAccountInterface {
-    private  SystemAccountType accountType;
-    private String loginUrl;
+    private final SystemAccountType accountType;
+    private final String loginUrl;
     private final String redirectUrl;
     private Dialog dialog;
     private WebView webView;
@@ -127,7 +125,6 @@ public class WebLogin extends WebViewClient implements SystemAccountInterface {
         }
         //webView.setInitialScale(110);
         webView.loadUrl(loginUrl);
-        startWatching();
         dialog.show();
         Window dialogWindow = dialog.getWindow();
         if(dialogWindow != null) {
@@ -184,28 +181,18 @@ public class WebLogin extends WebViewClient implements SystemAccountInterface {
         });
     }
 
-    public void startWatching() {
-        new WindowSizeRunnable().startWatching();
-    }
-
     private void showWebView() {
         Window dialogWindow = dialog.getWindow();
         if(dialogWindow != null) {
             dialogWindow.setFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND, WindowManager.LayoutParams.FLAG_DIM_BEHIND);
             dialogWindow.setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.MATCH_PARENT);
         }
-
     }
 
-    private class WindowSizeRunnable implements Runnable {
-        private final Handler mWindowRestoreHandler = new Handler(Looper.getMainLooper());
-        @Override
-        public void run() {
-            if(webView.getContentHeight() > 20) showWebView();
-            else mWindowRestoreHandler.postDelayed(this, 250);
-        }
-        public void startWatching() {
-            mWindowRestoreHandler.postDelayed(this, 0);
-        }
+    @Override
+    public void onPageFinished(WebView view, String url) {
+        super.onPageFinished(view, url);
+        if(url.startsWith("https://"+BuildConfig.SKY_SERVER_HOSTNAME)) return;
+        showWebView();
     }
 }
