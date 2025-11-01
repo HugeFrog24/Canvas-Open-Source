@@ -23,8 +23,8 @@ android {
         applicationId "git.artdeell.skymodloader"
         minSdk 26
         targetSdk 34
-        versionCode 47
-        versionName "1.6.5a"
+        versionCode 48
+        versionName "1.6.6"
 
         externalNativeBuild {
             cmake {
@@ -40,7 +40,7 @@ android {
         release {
             minifyEnabled true
             shrinkResources true
-            signingConfig signingConfigs.debug
+            signingConfig signingConfigs.release
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
