@@ -83,3 +83,62 @@
 # Keep BuildConfig (used throughout the app)
 -keep class git.artdeell.skymodloader.BuildConfig { *; }
 -keep class com.tgc.sky.BuildConfig { *; }
+
+# Not fully optimized, but better than nothing:
+
+# Keep JElf library (used by ElfLoader for ELF file parsing)
+-keep class net.fornwall.jelf.** { *; }
+
+# Keep ElfLoader class (used in MainActivity)
+-keep class git.artdeell.skymodloader.ElfLoader { *; }
+
+# Keep SMLApplication (stores resources)
+-keep class git.artdeell.skymodloader.SMLApplication { *; }
+
+# Keep GameActivity (started by MainActivity)
+-keep class com.tgc.sky.GameActivity { *; }
+
+# Keep TGCNativeActivity (parent of GameActivity)
+-keep class com.tgc.sky.TGCNativeActivity { *; }
+
+# Keep ArrayMap (used in ElfLoader)
+-keep class androidx.collection.ArrayMap { *; }
+
+# Keep all inner classes
+-keepattributes InnerClasses
+-keep class **$* { *; }
+
+# Keep enum methods
+-keepclassmembers enum * {
+    public static **[] values();
+    public static ** valueOf(java.lang.String);
+    **[] $VALUES;
+    public *;
+}
+
+# Preserve line numbers for debugging stack traces
+-keepattributes SourceFile,LineNumberTable
+-renamesourcefileattribute SourceFile
+
+# Keep all public classes/methods in git.artdeell and com.tgc packages
+-keepclassmembers class git.artdeell.** {
+    public *;
+}
+-keepclassmembers class com.tgc.** {
+    public *;
+}
+
+# Keep fields in classes that interact with native code
+-keepclassmembers class git.artdeell.skymodloader.DeviceInfo {
+    <fields>;
+}
+
+# Don't obfuscate classes that are loaded dynamically
+-keepnames class git.artdeell.skymodloader.**
+-keepnames class com.tgc.sky.**
+
+# Don't warn about missing Sky APK classes
+-dontwarn com.tgc.**
+
+# Don't warn about missing reflection classes
+-dontwarn java.lang.reflect.AnnotatedType
