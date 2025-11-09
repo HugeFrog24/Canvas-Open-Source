@@ -68,14 +68,17 @@
         </activity>
 
         <activity
-            android:name="com.tgc.sky.GameActivity"
-            android:colorMode="wideColorGamut"
-            android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|orientation|screenLayout|uiMode|screenSize|smallestScreenSize|fontScale"
-            android:keepScreenOn="true"
-            android:launchMode="singleTask"
-            android:resizeableActivity="false"
-            android:screenOrientation="sensorLandscape"
-            android:theme="@style/SkyFullscreenTheme" />
+                android:name="com.tgc.sky.GameActivity"
+                android:colorMode="wideColorGamut"
+                android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|orientation|screenLayout|uiMode|screenSize|smallestScreenSize|fontScale"
+                android:keepScreenOn="true"
+                android:launchMode="singleTask"
+                android:resizeableActivity="true"
+                android:screenOrientation="sensorLandscape"
+                android:theme="@style/SkyFullscreenTheme">
+            <meta-data android:name="android.notch_support" android:value="true"/>
+            <meta-data android:name="notch.config" android:value="portrait|landscape"/>
+        </activity>
         <activity android:name="com.tgc.sky.TGCNativeActivity" />
         <activity
             android:name=".MainActivity"
