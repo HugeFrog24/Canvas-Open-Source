@@ -18,6 +18,10 @@
 #include <android/asset_manager_jni.h>
 #include "shadowhook.h"
 
+extern "C" {
+#include "Core/ceserver/ceserver.h"
+}
+
 
 
 void do_scroll();
@@ -184,6 +188,7 @@ int main() {
     ->set_Callback((std::uintptr_t)&ImGuiEnd)
     ->set_Address("_ZN5ImGui3EndEv")
     ->Fire();
+
     return 0;
 }
 
@@ -196,11 +201,13 @@ Java_git_artdeell_skymodloader_MainActivity_settle(
         jint _gameType,
         jstring _hostName,
         jstring _configDir,
-        jobject _gameAssets
-) {
+        jobject _gameAssets,
+        jboolean _ceserver_enabled
+        ) {
     //env->GetJavaVM(&Canvas::javaVM);
     fsel_setup(env);
     Canvas::MainActivity = clazz;
+    Canvas::CeserverEnabled = _ceserver_enabled;    // This config is set in case it would ever be needed
     Canvas::gameVersion = _gameVersion;
     Canvas::gameType = _gameType;
     Canvas::configsPath = (*env).GetStringUTFChars(_configDir, NULL);
@@ -208,6 +215,12 @@ Java_git_artdeell_skymodloader_MainActivity_settle(
 
     Canvas::libElfScanner = ElfScanner::createWithPath(Canvas::libName);
     Canvas::libBase = Canvas::libElfScanner.baseSegment().startAddress;
+
+    if (Canvas::CeserverEnabled) {
+        LOGI("Starting Cheat Engine Server");
+        start_ceserver();
+    }
+
 }
 
 

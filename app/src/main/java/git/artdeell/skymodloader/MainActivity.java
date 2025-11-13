@@ -14,6 +14,7 @@ import android.provider.Settings;
 import android.util.DisplayMetrics;
 import android.content.ClipData;
 import android.content.ClipboardManager;
+import android.util.Log;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -35,6 +36,7 @@ import git.artdeell.skymodloader.iconloader.IconLoader;
 
 public class MainActivity extends Activity {
     private SharedPreferences sharedPreferences;
+    private boolean ceserverEnabled;
     public static String SKY_PACKAGE_NAME;
     private Map<String, Integer> skyPackages;
 
@@ -46,11 +48,11 @@ public class MainActivity extends Activity {
         deviceInfo = getDeviceInfo();
         sharedPreferences = getSharedPreferences("package_configs", Context.MODE_PRIVATE);
         SKY_PACKAGE_NAME = sharedPreferences.getString("sky_package_name", "com.tgc.sky.android");
+        ceserverEnabled = sharedPreferences.getBoolean("ceserver", false);
         sharedPreferences.edit().putString("sky_package_name", SKY_PACKAGE_NAME).apply();
         skyPackages = new HashMap<>();
         skyPackages.put("com.tgc.sky.android", 0);
-        skyPackages.put("com.tgc.sky.android.test.gold", 1);
-        skyPackages.put("com.tgc.sky.android.huawei", 2);
+        skyPackages.put("com.tgc.sky.android.huawei", 1);
         loadGame();
     }
 
@@ -139,14 +141,10 @@ public class MainActivity extends Activity {
                     gameType == null ? 0 : gameType,
                     BuildConfig.SKY_SERVER_HOSTNAME,
                     configDir.getAbsolutePath(),
-                    SMLApplication.skyRes.getAssets());
+                    SMLApplication.skyRes.getAssets(),
+                    ceserverEnabled
+            );
 
-            if (SKY_PACKAGE_NAME.equals("com.tgc.sky.android.test.gold")) {
-                SKY_PACKAGE_NAME = "com.tgc.sky.android.test.";
-                BuildConfig.SKY_SERVER_HOSTNAME = "beta.radiance.thatgamecompany.com";
-                BuildConfig.SKY_BRANCH_NAME = "Test";
-                BuildConfig.SKY_STAGE_NAME = "Test";
-            }
 
             if (sharedPreferences.getBoolean("custom_server", false)) {
                 BuildConfig.SKY_SERVER_HOSTNAME = sharedPreferences.getString("server_host",
@@ -306,11 +304,23 @@ public class MainActivity extends Activity {
         return deviceInfo;
     }
 
-    public static native void settle(int _gameVersion, int _gameType, String _hostName, String _configDir,
-            AssetManager _gameAssets);
+    public static native void settle(
+            int _gameVersion,
+            int _gameType,
+            String _hostName,
+            String _configDir,
+            AssetManager _gameAssets,
+            boolean _ceserverEnabled
+    );
 
-    public static native void setDeviceInfoNative(float _xdpi, float _ydpi, float _density, String _deviceName,
-            String _manufacturer, String _model);
+    public static native void setDeviceInfoNative(
+            float _xdpi,
+            float _ydpi,
+            float _density,
+            String _deviceName,
+            String _manufacturer,
+            String _model
+    );
 
     public static native void onKeyboardCompleteNative(String message);
 

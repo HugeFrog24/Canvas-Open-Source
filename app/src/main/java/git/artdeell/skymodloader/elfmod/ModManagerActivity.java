@@ -52,7 +52,6 @@ public class ModManagerActivity extends Activity implements LoadingListener, Mod
     private View addModButton;
     private View loadingBar;
     private Button btnLaunchLive;
-    private Button btnLaunchBeta;
     private Button btnLaunchHuawei;
     private String skyPackageName;
 
@@ -70,7 +69,6 @@ public class ModManagerActivity extends Activity implements LoadingListener, Mod
         addModButton = findViewById(R.id.mm_addMod);
         loadingBar = findViewById(R.id.mm_loadBar);
         btnLaunchLive = findViewById(R.id.mm_launch_live);
-        btnLaunchBeta = findViewById(R.id.mm_launch_beta);
         btnLaunchHuawei = findViewById(R.id.mm_launch_huawei);
 
         ((TextView) findViewById(R.id.mm_versionName)).setText(getString(R.string.mod_canvas_version, BuildConfig.VERSION_NAME));
@@ -115,7 +113,6 @@ public class ModManagerActivity extends Activity implements LoadingListener, Mod
     private void initializeSkyPackages() {
         skyPackages = new ArrayList<>();
         skyPackages.add("com.tgc.sky.android");
-        skyPackages.add("com.tgc.sky.android.test.gold");
         skyPackages.add("com.tgc.sky.android.huawei");
         SMLApplication.skyPName = skyPackages.get(0);
     }
@@ -127,8 +124,7 @@ public class ModManagerActivity extends Activity implements LoadingListener, Mod
             sharedPreferences.edit().putString("sky_package_name", skyPackageName).apply();
         }
         setButtonTextColor(btnLaunchLive, skyPackages.get(0));
-        setButtonTextColor(btnLaunchBeta, skyPackages.get(1));
-        setButtonTextColor(btnLaunchHuawei, skyPackages.get(2));
+        setButtonTextColor(btnLaunchHuawei, skyPackages.get(1));
     }
 
     private void setButtonTextColor(Button button, String packageName) {
@@ -160,13 +156,8 @@ public class ModManagerActivity extends Activity implements LoadingListener, Mod
             launchGame();
         });
 
-        btnLaunchBeta.setOnClickListener(view -> {
-            skyPackageName = skyPackages.get(1);
-            launchGame();
-        });
-
         btnLaunchHuawei.setOnClickListener(view -> {
-            skyPackageName = skyPackages.get(2);
+            skyPackageName = skyPackages.get(1);
             launchGame();
         });
 
@@ -178,13 +169,8 @@ public class ModManagerActivity extends Activity implements LoadingListener, Mod
             return true;
         });
 
-        btnLaunchBeta.setOnLongClickListener(view -> {
-            setSkyPackageName(skyPackages.get(1));
-            return true;
-        });
-
         btnLaunchHuawei.setOnLongClickListener(view -> {
-            setSkyPackageName(skyPackages.get(2));
+            setSkyPackageName(skyPackages.get(1));
             return true;
         });
     }
@@ -206,7 +192,11 @@ public class ModManagerActivity extends Activity implements LoadingListener, Mod
         sharedPreferences.edit().putBoolean("skip_updates", flag).apply();
     }
 
-    public void setCustomServer(boolean flag){
+    public void setCeserver(boolean flag) {
+        sharedPreferences.edit().putBoolean("ceserver", flag).apply();
+    }
+
+    public void setCustomServer(boolean flag) {
         sharedPreferences.edit().putBoolean("custom_server", flag).apply();
     }
 
@@ -239,7 +229,6 @@ public class ModManagerActivity extends Activity implements LoadingListener, Mod
         loadingBar.setVisibility(enable ? View.VISIBLE : View.GONE);
         addModButton.setEnabled(!enable);
         btnLaunchLive.setEnabled(!enable);
-        btnLaunchBeta.setEnabled(!enable);
         btnLaunchHuawei.setEnabled(!enable);
         modListView.setClickable(!enable);
     }
@@ -392,6 +381,7 @@ public class ModManagerActivity extends Activity implements LoadingListener, Mod
         dialogY.negativeButton.setOnClickListener((v)->dialogY.dialog.dismiss());
 
         SwitchMaterial bypassUpdate = new SwitchMaterial(this);
+        SwitchMaterial enableCeserver = new SwitchMaterial(this);
         SwitchMaterial enableServer = new SwitchMaterial(this);
         TextInputEditText serverSelector = new TextInputEditText(this);
 
@@ -412,6 +402,12 @@ public class ModManagerActivity extends Activity implements LoadingListener, Mod
         bypassUpdate.setText(R.string.switch_skip_updates);
         bypassUpdate.setChecked(sharedPreferences.getBoolean("skip_updates", false));
         bypassUpdate.setOnCheckedChangeListener((buttonView, isChecked) -> setSkipUpdates(isChecked));
+
+        enableCeserver.setTextSize(15);
+        enableCeserver.setLayoutParams(layoutParams);
+        enableCeserver.setText(R.string.enable_cheat_engine_server);
+        enableCeserver.setChecked(sharedPreferences.getBoolean("ceserver", false));
+        enableCeserver.setOnCheckedChangeListener((buttonView, isChecked) -> setCeserver(isChecked));
 
         enableServer.setTextSize(15);
         enableServer.setLayoutParams(layoutParams);
@@ -437,6 +433,7 @@ public class ModManagerActivity extends Activity implements LoadingListener, Mod
 
 
         dialogY.container.addView(bypassUpdate, layoutParams);
+        dialogY.container.addView(enableCeserver, layoutParams);
         dialogY.container.addView(enableServer, layoutParams);
         dialogY.container.addView(serverSelector, layoutParams);
         dialogY.dialog.show();
