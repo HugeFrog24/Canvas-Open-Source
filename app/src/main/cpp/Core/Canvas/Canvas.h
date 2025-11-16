@@ -55,6 +55,7 @@ namespace Canvas {
     extern JNIEnv *jniEnv;
     extern jobject systemUI;
     extern jclass MainActivity;
+    extern bool CeserverEnabled;
     extern const char *configsPath;
 
     extern std::vector<void (*)(std::string)> onKeyboardCompleteListeners;

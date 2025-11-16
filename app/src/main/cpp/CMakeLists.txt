@@ -5,6 +5,7 @@ cmake_minimum_required(VERSION 3.18.1)
 #set(CMAKE_BUILD_TYPE Debug)
 set(CMAKE_BUILD_TYPE Release)
 
+
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -flto -fuse-linker-plugin -finline-functions -fomit-frame-pointer -falign-functions -falign-jumps")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -flto -fuse-linker-plugin -finline-functions -fomit-frame-pointer -falign-functions -falign-jumps")
@@ -19,6 +20,7 @@ set_target_properties(ktx_read PROPERTIES IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/
 
 file(GLOB CPP_FILES
         ${CMAKE_CURRENT_SOURCE_DIR}/Core/**/*.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/Core/**/*.c
         ${CMAKE_CURRENT_SOURCE_DIR}/Utils/**/*.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Utils/**/*.c
         ${CMAKE_CURRENT_SOURCE_DIR}/Utils/KittyMemory/KittyMemory/*.cpp
@@ -54,6 +56,7 @@ endif()
 
 find_package(shadowhook REQUIRED CONFIG)
 
+
 target_link_libraries( # Specifies the target library.
         ciphered
         ktx_read
@@ -61,5 +64,6 @@ target_link_libraries( # Specifies the target library.
         GLESv3
         EGL
         android
+        z
         shadowhook::shadowhook
 )

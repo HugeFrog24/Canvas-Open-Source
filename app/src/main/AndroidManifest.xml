@@ -114,7 +114,6 @@
     <queries>
         <package android:name="com.tgc.sky.android" />
         <package android:name="com.tgc.sky.android.huawei" />
-        <package android:name="com.tgc.sky.android.test.gold" />
     </queries>
 
 </manifest>

@@ -53,6 +53,8 @@
     <string name="remove">Remove</string>
     <string name="check_for_updates">Check For Updates</string>
     <string name="switch_skip_updates">Bypass game updates</string>
+    <string name="enable_cheat_engine_server">Enable Cheat Engine Server</string>
+
     <string name="switch_custom_server">Enable custom server</string>
     <string name="close">Close</string>
     <string name="mod_icon">mod icon</string>
