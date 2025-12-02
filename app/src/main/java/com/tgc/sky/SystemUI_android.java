@@ -106,6 +106,10 @@ public class SystemUI_android {
         return true;
     }
 
+    public boolean SupportsARCamera() {
+        return false;
+    }
+
     public SystemUI_android(GameActivity gameActivity) {
         this.m_activity = gameActivity;
         this.m_localizationManager = new LocalizationManager(gameActivity);
