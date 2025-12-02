@@ -6,7 +6,7 @@ public class BuildConfig {
     public static String SKY_STAGE_NAME = "Live";
     public static String SKY_SERVER_HOSTNAME = "live.radiance.thatgamecompany.com";
     public static String SKY_VERSION = "0.17.5";
-    public static final String SKY_BUILD_ACCESS_KEY = "1743442606-63d58572462f37a8a43a11406d77b2b28980f99b9e2b75b6505459f5302b0c8d";
+    public static final String SKY_BUILD_ACCESS_KEY = "1743442606-c3933f202a536db6bb8a78019cd99f43fa85a7f9c935c62733a22b4901684534";
 
     public static int VERSION_CODE = 192395;
 }

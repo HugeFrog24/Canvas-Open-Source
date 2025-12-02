@@ -201,6 +201,12 @@ public class SystemUI_android {
         return !this.m_activity.getBridgeView().hasWindowFocus();
     }
 
+    void Update() {
+        /// TODO: implement this if you care. this is an urgent fix
+//        this.m_arCameraHandler.update();
+    }
+
+
     void AttemptRotationToDeviceOrientation() {
         int i = this.m_useSensorOrientation ? 4 : 6;
         if (i == this.m_activity.getRequestedOrientation() || this.m_activity.portraitOnResume || IsOrientationLocked()) {
