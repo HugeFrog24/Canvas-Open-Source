@@ -188,6 +188,10 @@ public class ModManagerActivity extends Activity implements LoadingListener, Mod
         }
     }
 
+    public void setHideCanvasMenu(boolean flag) {
+        sharedPreferences.edit().putBoolean("hide_canvas_menu", flag).apply();
+    }
+
     public void setSkipUpdates(boolean flag) {
         sharedPreferences.edit().putBoolean("skip_updates", flag).apply();
     }
@@ -380,6 +384,7 @@ public class ModManagerActivity extends Activity implements LoadingListener, Mod
         dialogY.negativeButton.setText(R.string.close);
         dialogY.negativeButton.setOnClickListener((v)->dialogY.dialog.dismiss());
 
+        SwitchMaterial hideCanvasMenu = new SwitchMaterial(this);
         SwitchMaterial bypassUpdate = new SwitchMaterial(this);
         SwitchMaterial enableCeserver = new SwitchMaterial(this);
         SwitchMaterial enableServer = new SwitchMaterial(this);
@@ -396,6 +401,11 @@ public class ModManagerActivity extends Activity implements LoadingListener, Mod
         int marginPx = dpToPixels(10);
         layoutParams.setMargins(marginPx, 0, 0, marginPx);
 
+        hideCanvasMenu.setTextSize(15);
+        hideCanvasMenu.setLayoutParams(layoutParams);
+        hideCanvasMenu.setText(R.string.switch_hide_canvas_menu);
+        hideCanvasMenu.setChecked(sharedPreferences.getBoolean("hide_canvas_menu", false));
+        hideCanvasMenu.setOnCheckedChangeListener((buttonView, isChecked) -> setHideCanvasMenu(isChecked));
 
         bypassUpdate.setTextSize(15);
         bypassUpdate.setLayoutParams(layoutParams);
@@ -430,8 +440,7 @@ public class ModManagerActivity extends Activity implements LoadingListener, Mod
             }
         });
 
-
-
+        dialogY.container.addView(hideCanvasMenu, layoutParams);
         dialogY.container.addView(bypassUpdate, layoutParams);
         dialogY.container.addView(enableCeserver, layoutParams);
         dialogY.container.addView(enableServer, layoutParams);

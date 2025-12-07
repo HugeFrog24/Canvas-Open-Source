@@ -52,10 +52,11 @@
     <string name="up_to_date_message">Current mod is up to date\nVersion: %1$s</string>
     <string name="remove">Remove</string>
     <string name="check_for_updates">Check For Updates</string>
-    <string name="switch_skip_updates">Bypass game updates</string>
+    <string name="switch_hide_canvas_menu">Hide Canvas Menu &amp; Auto Enable Mods</string>
+    <string name="switch_skip_updates">Bypass Game Updates</string>
     <string name="enable_cheat_engine_server">Enable Cheat Engine Server</string>
+    <string name="switch_custom_server">Enable Custom Server</string>
 
-    <string name="switch_custom_server">Enable custom server</string>
     <string name="close">Close</string>
     <string name="mod_icon">mod icon</string>
     <string name="no_update_links">No Update Links</string>

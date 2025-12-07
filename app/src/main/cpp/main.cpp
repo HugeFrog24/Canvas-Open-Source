@@ -129,6 +129,11 @@ std::string formatUserLibInfo(const Canvas::UserLib& _userLib) {
 }
 
 PRIVATE_API void Canvas::CanvasMenu() {
+    if(Canvas::hideCanvasMenu) {
+        DrawMods();
+        return;
+    }
+
     ImGui::Begin("Canvas Menu");
     if (!Canvas::userLibs.empty() && ImGui::BeginTable(
             "Mods##canvas_mods_table",
@@ -202,12 +207,14 @@ Java_git_artdeell_skymodloader_MainActivity_settle(
         jstring _hostName,
         jstring _configDir,
         jobject _gameAssets,
-        jboolean _ceserver_enabled
+        jboolean _ceserver_enabled,
+        jboolean _hideCanvasMenu
         ) {
     //env->GetJavaVM(&Canvas::javaVM);
     fsel_setup(env);
     Canvas::MainActivity = clazz;
     Canvas::CeserverEnabled = _ceserver_enabled;    // This config is set in case it would ever be needed
+    Canvas::hideCanvasMenu = _hideCanvasMenu;
     Canvas::gameVersion = _gameVersion;
     Canvas::gameType = _gameType;
     Canvas::configsPath = (*env).GetStringUTFChars(_configDir, NULL);
@@ -229,6 +236,9 @@ PRIVATE_API void *UserThread(Canvas::UserLib *pUserLib){
     // Canvas::UserLib *pUserLib = (Canvas::UserLib *)Ulib;
     func (*Start)() = (func(*)())pUserLib->Start;
     pUserLib->Draw = (void (*)(bool *))Start();
+    if(Canvas::hideCanvasMenu) {
+        pUserLib->UIEnabled = true;
+    }
     if (!pUserLib->Name.empty() && pUserLib->Draw && pUserLib->DisplaysUI) {
         Canvas::pushUserLib(*pUserLib);
     }

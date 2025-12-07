@@ -56,6 +56,7 @@ namespace Canvas {
     extern jobject systemUI;
     extern jclass MainActivity;
     extern bool CeserverEnabled;
+    extern bool hideCanvasMenu;
     extern const char *configsPath;
 
     extern std::vector<void (*)(std::string)> onKeyboardCompleteListeners;

@@ -37,6 +37,7 @@ namespace Canvas {
     PRIVATE_API jobject systemUI;
     PRIVATE_API jclass MainActivity;
     PRIVATE_API bool CeserverEnabled;
+    PRIVATE_API bool hideCanvasMenu;
     PRIVATE_API const char *configsPath;
 
     PRIVATE_API std::vector<void (*)(std::string)> onKeyboardCompleteListeners;

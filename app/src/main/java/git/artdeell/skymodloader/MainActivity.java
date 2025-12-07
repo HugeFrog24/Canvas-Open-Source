@@ -37,6 +37,7 @@ import git.artdeell.skymodloader.iconloader.IconLoader;
 public class MainActivity extends Activity {
     private SharedPreferences sharedPreferences;
     private boolean ceserverEnabled;
+    private boolean hideCanvasMenu;
     public static String SKY_PACKAGE_NAME;
     private Map<String, Integer> skyPackages;
 
@@ -49,6 +50,7 @@ public class MainActivity extends Activity {
         sharedPreferences = getSharedPreferences("package_configs", Context.MODE_PRIVATE);
         SKY_PACKAGE_NAME = sharedPreferences.getString("sky_package_name", "com.tgc.sky.android");
         ceserverEnabled = sharedPreferences.getBoolean("ceserver", false);
+        hideCanvasMenu = sharedPreferences.getBoolean("hide_canvas_menu", false);
         sharedPreferences.edit().putString("sky_package_name", SKY_PACKAGE_NAME).apply();
         skyPackages = new HashMap<>();
         skyPackages.put("com.tgc.sky.android", 0);
@@ -142,7 +144,8 @@ public class MainActivity extends Activity {
                     BuildConfig.SKY_SERVER_HOSTNAME,
                     configDir.getAbsolutePath(),
                     SMLApplication.skyRes.getAssets(),
-                    ceserverEnabled
+                    ceserverEnabled,
+                    hideCanvasMenu
             );
 
 
@@ -310,7 +313,8 @@ public class MainActivity extends Activity {
             String _hostName,
             String _configDir,
             AssetManager _gameAssets,
-            boolean _ceserverEnabled
+            boolean _ceserverEnabled,
+            boolean _hideCanvasMenu
     );
 
     public static native void setDeviceInfoNative(
