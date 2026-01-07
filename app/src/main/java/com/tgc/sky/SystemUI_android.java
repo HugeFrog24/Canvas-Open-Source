@@ -110,6 +110,10 @@ public class SystemUI_android {
         return false;
     }
 
+    public boolean IsARCameraActive() {
+    return false;
+}
+
     public SystemUI_android(GameActivity gameActivity) {
         this.m_activity = gameActivity;
         this.m_localizationManager = new LocalizationManager(gameActivity);
