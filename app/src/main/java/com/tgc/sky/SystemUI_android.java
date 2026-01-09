@@ -111,8 +111,8 @@ public class SystemUI_android {
     }
 
     public boolean IsARCameraActive() {
-    return false;
-}
+        return false;
+    }
 
     public SystemUI_android(GameActivity gameActivity) {
         this.m_activity = gameActivity;
@@ -155,6 +155,14 @@ public class SystemUI_android {
 
     public boolean HasLocalizedString(String str) {
         return this.m_localizationManager.HasLocalizedString(str);
+    }
+
+    public String GetLocalizedTextFromTextId(int textId) {
+        String textKey = "text_" + textId;
+        if (HasLocalizedString(textKey)) {
+            return LocalizeString(textKey);
+        }
+        return "";
     }
 
     public SpannableStringBuilder GetMarkedUpString(String str, ArrayList<Object> arrayList, boolean z) {
