@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -34,8 +35,10 @@ import java.util.Objects;
 
 import git.artdeell.skymodloader.BuildConfig;
 import git.artdeell.skymodloader.DialogY;
+import git.artdeell.skymodloader.LogcatMonitorService;
 import git.artdeell.skymodloader.MainActivity;
 import git.artdeell.skymodloader.R;
+import git.artdeell.skymodloader.SettingsActivity;
 import git.artdeell.skymodloader.SMLApplication;
 import git.artdeell.skymodloader.updater.CanvasUpdaterConnection;
 import git.artdeell.skymodloader.updater.CanvasUpdaterService;
@@ -47,14 +50,12 @@ public class ModManagerActivity extends Activity implements LoadingListener, Mod
     private static final int REQUEST_MOD = 1024 * 121;
     @SuppressLint("StaticFieldLeak")
     private static ElfUIBackbone loader;
-
     private RecyclerView modListView;
     private View addModButton;
     private View loadingBar;
     private Button btnLaunchLive;
     private Button btnLaunchHuawei;
     private String skyPackageName;
-
     private SharedPreferences sharedPreferences;
     private ArrayList<String> skyPackages;
     private ModUpdaterDialogManager mDialogManager;
@@ -64,33 +65,25 @@ public class ModManagerActivity extends Activity implements LoadingListener, Mod
         super.onCreate(savedInstanceState);
         runUpdater();
         setContentView(R.layout.mod_manager);
-
         modListView = findViewById(R.id.mm_modList);
         addModButton = findViewById(R.id.mm_addMod);
         loadingBar = findViewById(R.id.mm_loadBar);
         btnLaunchLive = findViewById(R.id.mm_launch_live);
         btnLaunchHuawei = findViewById(R.id.mm_launch_huawei);
-
         ((TextView) findViewById(R.id.mm_versionName)).setText(getString(R.string.mod_canvas_version, BuildConfig.VERSION_NAME));
-
         initializeSkyPackages();
         sharedPreferences = getSharedPreferences("package_configs", Context.MODE_PRIVATE);
         updateButtonTextColor();
-
         initializeModUpdater();
         initializeLoader();
-
         modListView.setLayoutManager(new LinearLayoutManager(this));
         modListView.setAdapter(new ModListAdapter(loader));
-
         setButtonClickListeners();
         setButtonLongClickListeners();
     }
 
     private void initializeModUpdater() {
         mDialogManager = new ModUpdaterDialogManager(this);
-        // This will not do anything if the service isn't already started, and it's only
-        // started when a mod is in the process of updating.
         bindService(new Intent(this, ModUpdaterService.class), mDialogManager, 0);
     }
 
@@ -100,11 +93,12 @@ public class ModManagerActivity extends Activity implements LoadingListener, Mod
             Toast.makeText(this, R.string.updater_busy, Toast.LENGTH_SHORT).show();
             return;
         }
+
         Intent serviceStartIntent = new Intent(this, ModUpdaterService.class);
         serviceStartIntent.putExtra(ModUpdaterService.EXTRA_UPDATE_URL, metadata.getGithubReleasesUrl());
         serviceStartIntent.putExtra(ModUpdaterService.EXTRA_LIB_NAME, metadata.name);
         serviceStartIntent.putExtra(ModUpdaterService.EXTRA_VERSION_NUMBER,
-                new VersionNumber(metadata.majorVersion, metadata.minorVersion, metadata.patchVersion)
+            new VersionNumber(metadata.majorVersion, metadata.minorVersion, metadata.patchVersion)
         );
         startService(serviceStartIntent);
         bindService(new Intent(this, ModUpdaterService.class), mDialogManager, 0);
@@ -123,6 +117,7 @@ public class ModManagerActivity extends Activity implements LoadingListener, Mod
             skyPackageName = "com.tgc.sky.android";
             sharedPreferences.edit().putString("sky_package_name", skyPackageName).apply();
         }
+
         setButtonTextColor(btnLaunchLive, skyPackages.get(0));
         setButtonTextColor(btnLaunchHuawei, skyPackages.get(1));
     }
@@ -149,18 +144,15 @@ public class ModManagerActivity extends Activity implements LoadingListener, Mod
         }
     }
 
-
     private void setButtonClickListeners() {
         btnLaunchLive.setOnClickListener(view -> {
             skyPackageName = skyPackages.get(0);
             launchGame();
         });
-
         btnLaunchHuawei.setOnClickListener(view -> {
             skyPackageName = skyPackages.get(1);
             launchGame();
         });
-
     }
 
     private void setButtonLongClickListeners() {
@@ -168,7 +160,6 @@ public class ModManagerActivity extends Activity implements LoadingListener, Mod
             setSkyPackageName(skyPackages.get(0));
             return true;
         });
-
         btnLaunchHuawei.setOnLongClickListener(view -> {
             setSkyPackageName(skyPackages.get(1));
             return true;
@@ -181,9 +172,9 @@ public class ModManagerActivity extends Activity implements LoadingListener, Mod
             updateButtonTextColor();
         } else {
             Toast.makeText(
-                    getApplicationContext(),
-                    getResources().getString(R.string.game_not_installed_warning),
-                    Toast.LENGTH_SHORT
+                getApplicationContext(),
+                getResources().getString(R.string.game_not_installed_warning),
+                Toast.LENGTH_SHORT
             ).show();
         }
     }
@@ -205,9 +196,23 @@ public class ModManagerActivity extends Activity implements LoadingListener, Mod
     }
 
     public void setServerUrl(String url) {
-
         sharedPreferences.edit().putString("server_host", url).apply();
+    }
 
+    public void setLogcatEnabled(boolean flag) {
+        sharedPreferences.edit().putBoolean("logcat_enabled", flag).apply();
+        Intent logcatIntent = new Intent(this, LogcatMonitorService.class);
+        if (flag) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                startForegroundService(logcatIntent);
+            } else {
+                startService(logcatIntent);
+            }
+            Toast.makeText(this, "Logcat monitoring enabled", Toast.LENGTH_SHORT).show();
+        } else {
+            stopService(logcatIntent);
+            Toast.makeText(this, "Logcat monitoring disabled", Toast.LENGTH_SHORT).show();
+        }
     }
 
     public void onAddMod(View v) {
@@ -263,7 +268,6 @@ public class ModManagerActivity extends Activity implements LoadingListener, Mod
                     case 3:
                         adapter.notifyDataSetChanged();
                 }
-
             } else modListView.setAdapter(new ModListAdapter(loader));
         });
     }
@@ -289,8 +293,7 @@ public class ModManagerActivity extends Activity implements LoadingListener, Mod
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
             builder.setTitle(R.string.mod_remove_unable);
             builder.setMessage(R.string.mod_ioe);
-            builder.setPositiveButton(android.R.string.ok, (d, w) -> {
-            });
+            builder.setPositiveButton(android.R.string.ok, (d, w) -> {});
             builder.show();
         });
     }
@@ -335,6 +338,7 @@ public class ModManagerActivity extends Activity implements LoadingListener, Mod
             sb.append(getString(R.string.mod_remove_dep, ModListAdapter.getVisibleModName(meta)));
             sb.append('\n');
         }
+
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle(R.string.mod_remove_unable);
         builder.setMessage(sb.toString());
@@ -368,84 +372,16 @@ public class ModManagerActivity extends Activity implements LoadingListener, Mod
             startActivity(new Intent(this, MainActivity.class));
         } else {
             Toast.makeText(
-                    getApplicationContext(),
-                    getResources().getString(R.string.game_not_installed_warning),
-                    Toast.LENGTH_SHORT
+                getApplicationContext(),
+                getResources().getString(R.string.game_not_installed_warning),
+                Toast.LENGTH_SHORT
             ).show();
         }
     }
 
-    @SuppressLint("SetTextI18n")
     public void onExtraSettingsDialog(View view) {
-        DialogY dialogY = DialogY.createFromActivity(this);
-        dialogY.positiveButton.setVisibility(View.GONE);
-        dialogY.content.setVisibility(View.GONE);
-        dialogY.title.setText(R.string.settings_title);
-        dialogY.negativeButton.setText(R.string.close);
-        dialogY.negativeButton.setOnClickListener((v)->dialogY.dialog.dismiss());
-
-        SwitchMaterial hideCanvasMenu = new SwitchMaterial(this);
-        SwitchMaterial bypassUpdate = new SwitchMaterial(this);
-        SwitchMaterial enableCeserver = new SwitchMaterial(this);
-        SwitchMaterial enableServer = new SwitchMaterial(this);
-        TextInputEditText serverSelector = new TextInputEditText(this);
-
-
-        LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-        );
-
-
-
-        int marginPx = dpToPixels(10);
-        layoutParams.setMargins(marginPx, 0, 0, marginPx);
-
-        hideCanvasMenu.setTextSize(15);
-        hideCanvasMenu.setLayoutParams(layoutParams);
-        hideCanvasMenu.setText(R.string.switch_hide_canvas_menu);
-        hideCanvasMenu.setChecked(sharedPreferences.getBoolean("hide_canvas_menu", false));
-        hideCanvasMenu.setOnCheckedChangeListener((buttonView, isChecked) -> setHideCanvasMenu(isChecked));
-
-        bypassUpdate.setTextSize(15);
-        bypassUpdate.setLayoutParams(layoutParams);
-        bypassUpdate.setText(R.string.switch_skip_updates);
-        bypassUpdate.setChecked(sharedPreferences.getBoolean("skip_updates", false));
-        bypassUpdate.setOnCheckedChangeListener((buttonView, isChecked) -> setSkipUpdates(isChecked));
-
-        enableCeserver.setTextSize(15);
-        enableCeserver.setLayoutParams(layoutParams);
-        enableCeserver.setText(R.string.enable_cheat_engine_server);
-        enableCeserver.setChecked(sharedPreferences.getBoolean("ceserver", false));
-        enableCeserver.setOnCheckedChangeListener((buttonView, isChecked) -> setCeserver(isChecked));
-
-        enableServer.setTextSize(15);
-        enableServer.setLayoutParams(layoutParams);
-        enableServer.setText(R.string.switch_custom_server);
-        enableServer.setChecked(sharedPreferences.getBoolean("custom_server", false));
-        enableServer.setOnCheckedChangeListener((buttonView, isChecked) -> setCustomServer(isChecked));
-
-        serverSelector.setText(sharedPreferences.getString("server_host", "insert-url"));
-        serverSelector.setSingleLine(true);
-        serverSelector.setImeOptions(EditorInfo.IME_ACTION_DONE);
-        serverSelector.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {}
-            @Override
-            public void afterTextChanged(Editable s) {
-                String url = s.toString();
-                setServerUrl(url);
-            }
-        });
-
-        dialogY.container.addView(hideCanvasMenu, layoutParams);
-        dialogY.container.addView(bypassUpdate, layoutParams);
-        dialogY.container.addView(enableCeserver, layoutParams);
-        dialogY.container.addView(enableServer, layoutParams);
-        dialogY.container.addView(serverSelector, layoutParams);
-        dialogY.dialog.show();
+        Intent intent = new Intent(this, SettingsActivity.class);
+        startActivity(intent);
     }
 
     public void runUpdater() {
@@ -456,5 +392,144 @@ public class ModManagerActivity extends Activity implements LoadingListener, Mod
     private int dpToPixels(int dp) {
         float scale = getResources().getDisplayMetrics().density;
         return (int) (dp * scale + 0.5f);
+    }
+
+    public void onClearAppData(View view) {
+        clearAppDataSelective();
+    }
+
+    private void clearAppDataSelective() {
+        new AlertDialog.Builder(this)
+            .setTitle("Clear App Data")
+            .setMessage("This will delete all Canvas data except:\n\n" +
+                "✓ AccountAuthInfo.bin\n" +
+                "✓ mods folder\n" +
+                "✓ Accounts folder\n" +
+                "✓ config/configs folders\n\n" +
+                "⚠️ The app will restart after clearing.")
+            .setPositiveButton("Clear", (dialog, which) -> {
+                new Thread(() -> {
+                    try {
+                        boolean isEmulator = getPackageName().equals("com.tgc.sky.android.sml");
+                        String packageName = isEmulator ? "com.tgc.sky.android.sml" : "git.artdeell.skymodloader";
+                        File dataDir = new File("/data/data/" + packageName);
+                        File filesDir = getFilesDir();
+                        File externalDataDir = new File("/sdcard/Android/data/" + packageName);
+
+                        Log.i("ClearData", "Starting selective clear for package: " + packageName);
+
+                        clearDirectorySelective(filesDir, new String[]{"mods", "Accounts", "config"}, new String[]{"AccountAuthInfo.bin"});
+
+                        File cacheDir = getCacheDir();
+                        if (cacheDir != null && cacheDir.exists()) {
+                            deleteRecursive(cacheDir);
+                            Log.i("ClearData", "Cache cleared");
+                        }
+
+                        File codeCacheDir = getCodeCacheDir();
+                        if (codeCacheDir != null && codeCacheDir.exists()) {
+                            deleteRecursive(codeCacheDir);
+                            Log.i("ClearData", "Code cache cleared");
+                        }
+
+                        File extractedLibs = new File(filesDir, "extracted_libs");
+                        if (extractedLibs.exists()) {
+                            deleteRecursive(extractedLibs);
+                            Log.i("ClearData", "Extracted libs cleared");
+                        }
+
+                        File logsDir = new File(externalDataDir, "files/logs");
+                        if (logsDir.exists()) {
+                            deleteRecursive(logsDir);
+                            Log.i("ClearData", "Logs cleared");
+                        }
+
+                        if (externalDataDir.exists()) {
+                            clearDirectorySelective(externalDataDir, new String[]{"mods", "Accounts", "config", "configs"}, new String[]{});
+                            Log.i("ClearData", "External data cleared (selective)");
+                        }
+
+                        File sharedPrefsDir = new File(dataDir, "shared_prefs");
+                        if (sharedPrefsDir.exists()) {
+                            File[] prefFiles = sharedPrefsDir.listFiles();
+                            if (prefFiles != null) {
+                                for (File prefFile : prefFiles) {
+                                    if (!prefFile.getName().contains("package_configs")) {
+                                        prefFile.delete();
+                                        Log.i("ClearData", "Deleted pref: " + prefFile.getName());
+                                    }
+                                }
+                            }
+                        }
+
+                        Log.i("ClearData", "Selective clear completed successfully");
+                        runOnUiThread(() -> {
+                            Toast.makeText(this, "Data cleared successfully. Restarting...", Toast.LENGTH_SHORT).show();
+                            new android.os.Handler().postDelayed(() -> {
+                                Intent intent = getPackageManager().getLaunchIntentForPackage(getPackageName());
+                                if (intent != null) {
+                                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                                    startActivity(intent);
+                                }
+                                System.exit(0);
+                            }, 500);
+                        });
+                    } catch (Exception e) {
+                        Log.e("ClearData", "Error clearing data", e);
+                        runOnUiThread(() -> {
+                            Toast.makeText(this, "Error clearing data: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                        });
+                    }
+                }).start();
+            })
+            .setNegativeButton("Cancel", null)
+            .show();
+    }
+
+    private void clearDirectorySelective(File dir, String[] preserveFolders, String[] preserveFiles) {
+        if (!dir.exists() || !dir.isDirectory()) return;
+        File[] files = dir.listFiles();
+        if (files == null) return;
+        for (File file : files) {
+            boolean shouldPreserve = false;
+            if (file.isDirectory()) {
+                for (String folder : preserveFolders) {
+                    if (file.getName().equals(folder)) {
+                        shouldPreserve = true;
+                        Log.i("ClearData", "Preserving folder: " + file.getName());
+                        break;
+                    }
+                }
+            }
+            if (file.isFile()) {
+                for (String fileName : preserveFiles) {
+                    if (file.getName().equals(fileName)) {
+                        shouldPreserve = true;
+                        Log.i("ClearData", "Preserving file: " + file.getName());
+                        break;
+                    }
+                }
+            }
+            if (!shouldPreserve) {
+                if (file.isDirectory()) {
+                    deleteRecursive(file);
+                } else {
+                    file.delete();
+                }
+                Log.i("ClearData", "Deleted: " + file.getName());
+            }
+        }
+    }
+
+    private void deleteRecursive(File fileOrDirectory) {
+        if (fileOrDirectory.isDirectory()) {
+            File[] children = fileOrDirectory.listFiles();
+            if (children != null) {
+                for (File child : children) {
+                    deleteRecursive(child);
+                }
+            }
+        }
+        fileOrDirectory.delete();
     }
 }

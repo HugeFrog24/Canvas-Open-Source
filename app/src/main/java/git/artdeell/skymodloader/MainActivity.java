@@ -7,7 +7,6 @@ import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.content.res.AssetManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
@@ -40,22 +39,51 @@ public class MainActivity extends Activity {
     private boolean hideCanvasMenu;
     public static String SKY_PACKAGE_NAME;
     private Map<String, Integer> skyPackages;
-
     public static DeviceInfo deviceInfo;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         deviceInfo = getDeviceInfo();
         sharedPreferences = getSharedPreferences("package_configs", Context.MODE_PRIVATE);
+
+        boolean logcatEnabled = sharedPreferences.getBoolean("logcat_enabled", false);
+        if (logcatEnabled) {
+            startLogcatMonitoring();
+        }
+
         SKY_PACKAGE_NAME = sharedPreferences.getString("sky_package_name", "com.tgc.sky.android");
         ceserverEnabled = sharedPreferences.getBoolean("ceserver", false);
         hideCanvasMenu = sharedPreferences.getBoolean("hide_canvas_menu", false);
+
+        if (sharedPreferences.getBoolean("custom_build_key", false)) {
+            String buildKey = sharedPreferences.getString("build_access_key", "");
+            if (!buildKey.isEmpty()) {
+                BuildConfig.SKY_BUILD_ACCESS_KEY = buildKey;
+                Log.i("MainActivity", "Applied custom build key: " + buildKey.substring(0, Math.min(20, buildKey.length())) + "...");
+            }
+        }
+
         sharedPreferences.edit().putString("sky_package_name", SKY_PACKAGE_NAME).apply();
         skyPackages = new HashMap<>();
         skyPackages.put("com.tgc.sky.android", 0);
         skyPackages.put("com.tgc.sky.android.huawei", 1);
         loadGame();
+    }
+
+    private void startLogcatMonitoring() {
+        try {
+            Intent logcatIntent = new Intent(this, LogcatMonitorService.class);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                startForegroundService(logcatIntent);
+            } else {
+                startService(logcatIntent);
+            }
+            Log.d("MainActivity", "Logcat monitoring started");
+        } catch (Exception e) {
+            Log.e("MainActivity", "Failed to start logcat monitoring", e);
+        }
     }
 
     private void loadGame() {
@@ -68,14 +96,10 @@ public class MainActivity extends Activity {
             String versionName = info.versionName;
             BuildConfig.SKY_VERSION = versionName.substring(0, versionName.indexOf(' ')).trim();
             BuildConfig.VERSION_CODE = info.versionCode;
-
             String nativeLibraryDir = info.applicationInfo.nativeLibraryDir;
             String libPath = nativeLibraryDir;
-
-            // Check if nativeLibraryDir is empty or doesn't contain libs (split APK case)
             File libDir = new File(nativeLibraryDir);
             if (!libDir.exists() || libDir.listFiles() == null || libDir.listFiles().length == 0) {
-                // Extract from split APK
                 libPath = extractLibrariesFromApk(info.applicationInfo);
             }
 
@@ -83,13 +107,9 @@ public class MainActivity extends Activity {
             File configDir = new File(getFilesDir(), "config");
             if (!configDir.isDirectory() && !configDir.mkdirs())
                 throw new IOException("Failed to create mod configuration directory");
-
             android.util.Log.i("MainActivity", "Pre-loading FMOD dependencies from: " + libPath);
-
             org.fmod.FMOD.init(this);
-
             File fmodLibDir = new File(libPath);
-
             android.util.Log.i("MainActivity", "Listing all files in: " + libPath);
             File[] allFiles = fmodLibDir.listFiles();
             if (allFiles != null) {
@@ -101,12 +121,11 @@ public class MainActivity extends Activity {
             }
 
             String[] libsToLoad = {
-                    "libc++_shared.so",
-                    "libOpenSLES.so",
-                    "libfmod.so",
-                    "libfmodstudio.so"
+                "libc++_shared.so",
+                "libOpenSLES.so",
+                "libfmod.so",
+                "libfmodstudio.so"
             };
-
             for (String libName : libsToLoad) {
                 File lib = new File(fmodLibDir, libName);
                 if (lib.exists()) {
@@ -122,36 +141,31 @@ public class MainActivity extends Activity {
                     android.util.Log.w("MainActivity", "Not found: " + libName + " at " + lib.getAbsolutePath());
                 }
             }
-
             ElfLoader loader = new ElfLoader(libPath + ":/system/lib64");
             loader.loadLib("libBootloader.so");
             System.loadLibrary("ciphered");
-
             setDeviceInfoNative(
-                    deviceInfo.xdpi,
-                    deviceInfo.ydpi,
-                    deviceInfo.density,
-                    Optional.ofNullable(deviceInfo.deviceName).orElse(""),
-                    Optional.ofNullable(deviceInfo.deviceManufacturer).orElse(""),
-                    Optional.ofNullable(deviceInfo.deviceModel).orElse(""));
-
+                deviceInfo.xdpi,
+                deviceInfo.ydpi,
+                deviceInfo.density,
+                Optional.ofNullable(deviceInfo.deviceName).orElse(""),
+                Optional.ofNullable(deviceInfo.deviceManufacturer).orElse(""),
+                Optional.ofNullable(deviceInfo.deviceModel).orElse(""));
             IconLoader.findIcons();
             BuildConfig.VERSION_CODE = sharedPreferences.getBoolean("skip_updates", false) ? 0x99999 : info.versionCode;
             Integer gameType = skyPackages.getOrDefault(SKY_PACKAGE_NAME, 0);
             MainActivity.settle(
-                    info.versionCode,
-                    gameType == null ? 0 : gameType,
-                    BuildConfig.SKY_SERVER_HOSTNAME,
-                    configDir.getAbsolutePath(),
-                    SMLApplication.skyRes.getAssets(),
-                    ceserverEnabled,
-                    hideCanvasMenu
+                info.versionCode,
+                gameType == null ? 0 : gameType,
+                BuildConfig.SKY_SERVER_HOSTNAME,
+                configDir.getAbsolutePath(),
+                SMLApplication.skyRes.getAssets(),
+                ceserverEnabled,
+                hideCanvasMenu
             );
-
-
             if (sharedPreferences.getBoolean("custom_server", false)) {
                 BuildConfig.SKY_SERVER_HOSTNAME = sharedPreferences.getString("server_host",
-                        BuildConfig.SKY_SERVER_HOSTNAME);
+                    BuildConfig.SKY_SERVER_HOSTNAME);
                 MainActivity.customServer(BuildConfig.SKY_SERVER_HOSTNAME);
             }
 
@@ -173,8 +187,6 @@ public class MainActivity extends Activity {
 
         android.util.Log.i("MainActivity", "Looking for split APKs...");
         android.util.Log.i("MainActivity", "sourceDir: " + appInfo.sourceDir);
-
-        // Find split APK containing native libs
         String[] splitSourceDirs = appInfo.splitSourceDirs;
         if (splitSourceDirs != null) {
             android.util.Log.i("MainActivity", "Found " + splitSourceDirs.length + " split APKs");
@@ -198,19 +210,16 @@ public class MainActivity extends Activity {
         android.util.Log.i("MainActivity", "Extracting libs from: " + apkPath);
         java.util.zip.ZipFile zipFile = new java.util.zip.ZipFile(apkPath);
         java.util.Enumeration<? extends java.util.zip.ZipEntry> entries = zipFile.entries();
-
         int libCount = 0;
         while (entries.hasMoreElements()) {
             java.util.zip.ZipEntry entry = entries.nextElement();
             String name = entry.getName();
-
             if (name.startsWith("lib/arm64-v8a/") && name.endsWith(".so")) {
                 String libName = name.substring(name.lastIndexOf('/') + 1);
                 File destFile = new File(destDir, libName);
-
                 if (!destFile.exists()) {
                     try (java.io.InputStream in = zipFile.getInputStream(entry);
-                            java.io.FileOutputStream out = new java.io.FileOutputStream(destFile)) {
+                         java.io.FileOutputStream out = new java.io.FileOutputStream(destFile)) {
                         byte[] buffer = new byte[8192];
                         int read;
                         while ((read = in.read(buffer)) != -1) {
@@ -241,9 +250,7 @@ public class MainActivity extends Activity {
         th.printStackTrace(pw);
         String stackTrace = sw.toString();
         pw.close();
-
         AlertDialog dialog = getAlertDialog(stackTrace);
-
         dialog.getButton(AlertDialog.BUTTON_NEUTRAL).setOnClickListener(v -> {
             copyToClipboard(stackTrace);
         });
@@ -252,20 +259,11 @@ public class MainActivity extends Activity {
     private @NonNull AlertDialog getAlertDialog(String stackTrace) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setMessage(stackTrace);
-
-        // Existing OK button to dismiss the dialog
         builder.setPositiveButton(android.R.string.ok, (d, w) -> finish());
-
-        // Show the dialog without setting neutral button here, so it doesn't close by
-        // default
         AlertDialog dialog = builder.create();
-
-        // Add the "Copy" button manually after creating the dialog
         dialog.setButton(AlertDialog.BUTTON_NEUTRAL, "Copy", (d, which) -> {
             copyToClipboard(stackTrace);
         });
-
-        // Show the dialog
         dialog.show();
         return dialog;
     }
@@ -274,8 +272,6 @@ public class MainActivity extends Activity {
         ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
         ClipData clip = ClipData.newPlainText("Stack Trace", stackTrace);
         clipboard.setPrimaryClip(clip);
-
-        // Only show the toast for versions below API level 33 (Android 13)
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
             Toast.makeText(this, "Stack trace copied to clipboard", Toast.LENGTH_SHORT).show();
         }
@@ -294,44 +290,39 @@ public class MainActivity extends Activity {
         deviceInfo.xdpi = displayMetrics.xdpi;
         deviceInfo.ydpi = displayMetrics.ydpi;
         deviceInfo.density = displayMetrics.density;
-
         deviceInfo.deviceName = Settings.Global.getString(getContentResolver(), "device_name");
         if (deviceInfo.deviceName == null || deviceInfo.deviceName.isEmpty()) {
             deviceInfo.deviceName = Settings.Secure.getString(getContentResolver(), "bluetooth_name");
         }
-        deviceInfo.deviceName = (deviceInfo.deviceName == null || deviceInfo.deviceName.isEmpty()) ? "NO_DEVICE_NAME"
-                : deviceInfo.deviceName;
 
+        deviceInfo.deviceName = (deviceInfo.deviceName == null || deviceInfo.deviceName.isEmpty()) ? "NO_DEVICE_NAME"
+            : deviceInfo.deviceName;
         deviceInfo.deviceManufacturer = Build.MANUFACTURER;
         deviceInfo.deviceModel = Build.MODEL;
         return deviceInfo;
     }
 
     public static native void settle(
-            int _gameVersion,
-            int _gameType,
-            String _hostName,
-            String _configDir,
-            AssetManager _gameAssets,
-            boolean _ceserverEnabled,
-            boolean _hideCanvasMenu
+        int _gameVersion,
+        int _gameType,
+        String _hostName,
+        String _configDir,
+        android.content.res.AssetManager _gameAssets,
+        boolean _ceserverEnabled,
+        boolean _hideCanvasMenu
     );
 
     public static native void setDeviceInfoNative(
-            float _xdpi,
-            float _ydpi,
-            float _density,
-            String _deviceName,
-            String _manufacturer,
-            String _model
+        float _xdpi,
+        float _ydpi,
+        float _density,
+        String _deviceName,
+        String _manufacturer,
+        String _model
     );
 
     public static native void onKeyboardCompleteNative(String message);
-
     public static native void customServer(String url);
-
     public static native void lateInitUserLibs();
-
     public static native void getSysetemUI(Object systemUI);
-
 }
