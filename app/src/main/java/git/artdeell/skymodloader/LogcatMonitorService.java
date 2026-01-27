@@ -38,7 +38,6 @@ public class LogcatMonitorService extends Service {
         super.onCreate();
         Log.d(TAG, "Service created");
 
-        // IMPORTANTE: Chiama startForeground() IMMEDIATAMENTE
         createNotificationChannel();
         startForeground(NOTIFICATION_ID, createNotification("Starting..."));
     }
@@ -83,13 +82,13 @@ public class LogcatMonitorService extends Service {
 
         monitorThread = new Thread(() -> {
             try {
-                // Crea directory logs
+                // create directory logs
                 File logsDir = new File(getExternalFilesDir(null), "logs");
                 if (!logsDir.exists()) {
                     logsDir.mkdirs();
                 }
 
-                // Crea file log con timestamp
+                // create log file with timestamp
                 String timestamp = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss", Locale.getDefault())
                     .format(new Date());
                 logFile = new File(logsDir, "canvas_full_logcat_" + timestamp + ".txt");
@@ -97,7 +96,7 @@ public class LogcatMonitorService extends Service {
 
                 Log.d(TAG, "Log file: " + logFile.getAbsolutePath());
 
-                // Avvia logcat
+                // starts logcat
                 ProcessBuilder processBuilder = new ProcessBuilder("logcat", "-v", "threadtime");
                 logcatProcess = processBuilder.start();
 
@@ -110,7 +109,7 @@ public class LogcatMonitorService extends Service {
                     logWriter.write(line + "\n");
                     lineCount++;
 
-                    // Aggiorna notifica ogni 50 righe
+                    // update every 50 lines
                     if (lineCount % 50 == 0) {
                         updateNotification("Captured " + lineCount + " lines");
                     }
