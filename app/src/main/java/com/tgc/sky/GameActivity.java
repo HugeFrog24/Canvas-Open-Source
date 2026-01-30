@@ -37,14 +37,11 @@ import android.view.animation.Animation;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
-
 import androidx.core.view.InputDeviceCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
-
 import com.tgc.sky.io.AudioDeviceType;
 import com.tgc.sky.ui.panels.BasePanel;
 import com.tgc.sky.ui.Utils;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -53,7 +50,6 @@ import java.util.TimerTask;
 import org.fmod.FMOD;
 import org.json.JSONException;
 import org.json.JSONObject;
-
 import git.artdeell.skymodloader.BuildConfig;
 import git.artdeell.skymodloader.DialogJNI;
 import git.artdeell.skymodloader.FileSelector;
@@ -67,13 +63,12 @@ import kotlin.KotlinVersion;
 public class GameActivity extends TGCNativeActivity {
     static final boolean ENABLE_DISPLAY_CUTOUT_MODE = true;
     private static final String TAG = "GameActivity";
-    /* access modifiers changed from: private */
-    public ArrayList<Integer> mGameControllerIds;
-    private ArrayList<OnActivityIntentListener> mOnActivityIntentListeners;
-    private ArrayList<OnActivityResultListener> mOnActivityResultListeners;
-    private ArrayList<OnKeyboardListener> mOnKeyboardListeners;
+    private ArrayList mGameControllerIds;
+    private ArrayList mOnActivityIntentListeners;
+    private ArrayList mOnActivityResultListeners;
+    private ArrayList mOnKeyboardListeners;
     private PermissionCallback mPermissionCallback = null;
-    private ArrayList<BasePanel> mActivePanels = new ArrayList<>();
+    private ArrayList mActivePanels = new ArrayList<>();
     private ImageView logoView;
     private MediaPlayer m_mediaPlayer;
     private int m_nativeHeight;
@@ -82,11 +77,9 @@ public class GameActivity extends TGCNativeActivity {
     private boolean imguiKeybaordShowing;
     private ImGUITextInput imguiInput;
     private boolean m_logoSoundReleased = false;
-    /* access modifiers changed from: private */
     public Rect mSafeAreaInsets = new Rect();
     private Handler m_keyboardHandler = null;
     private int m_keyboardHeight = 0;
-
     private boolean m_editTextFocused = false;
     private boolean m_isKeyboardShowing = false;
     private RelativeLayout m_relativeLayout;
@@ -132,12 +125,8 @@ public class GameActivity extends TGCNativeActivity {
     }
 
     private native void onCreateNative();
-
-    /* access modifiers changed from: private */
     public native void onSafeAreaInsetsChanged(float[] fArr);
-
     private static native boolean onTouchNative(int i, int i2, float f, float f2, double d);
-
     public native String ResolveTemplateArgsNative(String str);
 
     public int getAppBuildVersion() {
@@ -153,31 +142,18 @@ public class GameActivity extends TGCNativeActivity {
     }
 
     public native void onAudioDeviceTypeChangedNative(int i);
-
     public native void onBackPressedNative();
-
     public native boolean onButtonPressNative(int i, boolean z, boolean z2, double d);
-
     public native void onCommerceUpdateNative(boolean z, boolean z2, boolean z3);
-
     public native void onDpadEventNative(float f, float f2, double d);
-
     public native void onGamepadConnectedNative();
-
     public native void onGamepadDisconnectedNative();
-
     public native void onInternetReachabilityNative(boolean z, boolean z2);
-
     public native void onKeyboardCompleteNative(String str, boolean z, boolean z2);
-
     public native void onNFCTagScannedNative(String str, int i, String str2, String str3);
-
     public native void onOpenedWithURLNative(String str, boolean z);
-
     public native void onStickEventNative(float f, float f2, float f3, float f4);
-
     public native void onSystemScreenshotTakenNative();
-
     public native void onVolumeChangeNative(float f, float f2);
 
     public float transformHeightToProgram(float f) {
@@ -201,7 +177,6 @@ public class GameActivity extends TGCNativeActivity {
     }
 
     public native void onDisplayChangedNative();
-
 
     private boolean isTextRenderingBrokenForDevice() {
         if (Build.VERSION.SDK_INT == 31 || Build.VERSION.SDK_INT == 32) {
@@ -233,13 +208,11 @@ public class GameActivity extends TGCNativeActivity {
         }
     }
 
-    /* access modifiers changed from: protected */
     public void onCreate(Bundle bundle) {
         super.onCreate(bundle);
         DialogJNI.setActivity(this);
         hideNavigationFullScreen(getWindow().getDecorView());
         getWindow().addFlags(2097280);
-        //getWindow().setSoftInputMode(48);
         tryEnablingDisplayCutoutMode();
         setContentView(R.layout.tgc_logo);
         this.m_relativeLayout = findViewById(R.id.sml_relLayout);
@@ -253,7 +226,14 @@ public class GameActivity extends TGCNativeActivity {
         ImGUI.setClipboardService((ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE));
         imguiInput = findViewById(R.id.imguiInput);
         FMOD.init(this);
-        new SystemCommerce_android(this);
+
+        SystemCommerce_android commerceInstance = SystemCommerce_android.getInstance();
+        if (commerceInstance == null) {
+            commerceInstance = new SystemCommerce_android(this);
+        } else {
+            commerceInstance.setActivity(this);
+        }
+
         this.m_systemIO = new SystemIO_android(this);
         this.m_systemAccounts = new SystemAccounts_android(this);
         SystemRemoteConfig_android.getInstance().Initialize(this);
@@ -267,6 +247,7 @@ public class GameActivity extends TGCNativeActivity {
         if (intent != null) {
             HandleNewIntent(intent);
         }
+
         getWindow().getDecorView().setOnApplyWindowInsetsListener((view, windowInsets) -> {
             try {
                 int max = Integer.max(windowInsets.getStableInsetTop(), windowInsets.getStableInsetBottom());
@@ -291,24 +272,24 @@ public class GameActivity extends TGCNativeActivity {
                 return windowInsets;
             }
         });
+
         if (Build.VERSION.SDK_INT >= 30) {
             setupDisplayListener();
         }
-
     }
 
     private void setupDisplayListener() {
         final DisplayManager displayManager = (DisplayManager) getSystemService(Context.DISPLAY_SERVICE);
-        displayManager.registerDisplayListener(new DisplayManager.DisplayListener() { // from class: com.tgc.sky.GameActivity.1
-            @Override // android.hardware.display.DisplayManager.DisplayListener
+        displayManager.registerDisplayListener(new DisplayManager.DisplayListener() {
+            @Override
             public void onDisplayAdded(int i) {
             }
 
-            @Override // android.hardware.display.DisplayManager.DisplayListener
+            @Override
             public void onDisplayRemoved(int i) {
             }
 
-            @Override // android.hardware.display.DisplayManager.DisplayListener
+            @Override
             public void onDisplayChanged(int i) {
                 if (displayManager.getDisplay(i) != null) {
                     GameActivity.this.onDisplayChangedNative();
@@ -329,7 +310,7 @@ public class GameActivity extends TGCNativeActivity {
         super.onDestroy();
     }
 
-    @Override // com.tgc.sky.TGCNativeActivity, android.app.Activity
+    @Override
     public void onResume() {
         if (this.portraitOnResume) {
             setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
@@ -369,7 +350,6 @@ public class GameActivity extends TGCNativeActivity {
         onBackPressedNative();
     }
 
-
     public void AddOnActivityIntentListener(OnActivityIntentListener onActivityIntentListener) {
         if (this.mOnActivityIntentListeners == null) {
             this.mOnActivityIntentListeners = new ArrayList<>();
@@ -380,18 +360,18 @@ public class GameActivity extends TGCNativeActivity {
     }
 
     public void RemoveOnActivityIntentListeners(OnActivityIntentListener onActivityIntentListener) {
-        ArrayList<OnActivityIntentListener> arrayList = this.mOnActivityIntentListeners;
+        ArrayList arrayList = this.mOnActivityIntentListeners;
         if (arrayList != null) {
             arrayList.remove(onActivityIntentListener);
         }
     }
 
     public void onNewIntent(Intent intent) {
-        ArrayList<OnActivityIntentListener> arrayList = this.mOnActivityIntentListeners;
+        ArrayList arrayList = this.mOnActivityIntentListeners;
         if (arrayList != null) {
-            Iterator<OnActivityIntentListener> it = arrayList.iterator();
+            Iterator it = arrayList.iterator();
             while (it.hasNext()) {
-                if (it.next().onNewIntent(intent)) {
+                if (((OnActivityIntentListener)it.next()).onNewIntent(intent)) {
                     return;
                 }
             }
@@ -399,16 +379,13 @@ public class GameActivity extends TGCNativeActivity {
         HandleNewIntent(intent);
     }
 
-    /* access modifiers changed from: package-private */
-    public void HandleNewIntent(Intent intent) {
+    void HandleNewIntent(Intent intent) {
         Bundle extras = intent.getExtras();
         if (extras != null) {
             JSONObject jSONObject = new JSONObject();
             for (String str : extras.keySet()) {
                 try {
-                    //if (!str.startsWith(Constants.REFERRER_API_GOOGLE) && !str.equalsIgnoreCase(Constants.MessagePayloadKeys.FROM) && !str.equalsIgnoreCase(Constants.MessagePayloadKeys.COLLAPSE_KEY)) {
-                        jSONObject.put(str, JSONObject.wrap(extras.get(str)));
-                    //}
+                    jSONObject.put(str, JSONObject.wrap(extras.get(str)));
                 } catch (JSONException ignored) {
                 }
             }
@@ -433,21 +410,20 @@ public class GameActivity extends TGCNativeActivity {
     }
 
     public void RemoveOnActivityResultListeners(OnActivityResultListener onActivityResultListener) {
-        ArrayList<OnActivityResultListener> arrayList = this.mOnActivityResultListeners;
+        ArrayList arrayList = this.mOnActivityResultListeners;
         if (arrayList != null) {
             arrayList.remove(onActivityResultListener);
         }
     }
 
-    /* access modifiers changed from: protected */
     @Override
     protected void onActivityResult(int i, int i2, Intent intent) {
         Log.i("Interlock","GameActivity onActivityResult");
         super.onActivityResult(i, i2, intent);
-        ArrayList<OnActivityResultListener> arrayList = this.mOnActivityResultListeners;
+        ArrayList arrayList = this.mOnActivityResultListeners;
         if (arrayList != null) {
-            for (OnActivityResultListener onActivityResultListener : arrayList) {
-                onActivityResultListener.onActivityResult(i, i2, intent);
+            for (Object obj : arrayList) {
+                ((OnActivityResultListener)obj).onActivityResult(i, i2, intent);
             }
         }
     }
@@ -511,12 +487,11 @@ public class GameActivity extends TGCNativeActivity {
         this.mPermissionCallback = null;
     }
 
-
     public void requestPermissionsThroughSettings(final String[] strArr, final PermissionCallback permissionCallback) {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                GameActivity.this.AddOnActivityResultListener(new OnActivityResultListener() { // from class: com.tgc.sky.GameActivity.3.1
+                GameActivity.this.AddOnActivityResultListener(new OnActivityResultListener() {
                     @Override
                     public void onActivityResult(int i, int i2, Intent intent) {
                         if (i == 100) {
@@ -532,7 +507,7 @@ public class GameActivity extends TGCNativeActivity {
 
     public boolean onTouchEvent(MotionEvent motionEvent) {
         int actionMasked = motionEvent.getActionMasked();
-        if (actionMasked == MotionEvent.ACTION_UP || actionMasked == MotionEvent.ACTION_DOWN  || actionMasked == MotionEvent.ACTION_MOVE) {
+        if (actionMasked == MotionEvent.ACTION_UP || actionMasked == MotionEvent.ACTION_DOWN || actionMasked == MotionEvent.ACTION_MOVE) {
             ImGUI.submitPositionEvent(motionEvent.getX(), motionEvent.getY());
             if (actionMasked == MotionEvent.ACTION_DOWN) {
                 ImGUI.submitButtonEvent(0, true);
@@ -540,7 +515,6 @@ public class GameActivity extends TGCNativeActivity {
             if (actionMasked == MotionEvent.ACTION_UP) {
                 ImGUI.submitButtonEvent(0, false);
             }
-
             boolean wantsKeyboard = ImGUI.wantsKeyboard();
             if (wantsKeyboard && !imguiKeybaordShowing) {
                 imguiInput.setKeyboardState(true);
@@ -566,7 +540,6 @@ public class GameActivity extends TGCNativeActivity {
 
     public void notifyEditTextFocus(boolean z) {
         this.m_editTextFocused = z;
-
         int identifier;
         if (Build.VERSION.SDK_INT < 30) {
             try {
@@ -637,23 +610,21 @@ public class GameActivity extends TGCNativeActivity {
     }
 
     protected void onShowKeyboard(int i) {
-        ArrayList<OnKeyboardListener> arrayList = this.mOnKeyboardListeners;
+        ArrayList arrayList = this.mOnKeyboardListeners;
         if (arrayList == null) {
             return;
         }
-        for (OnKeyboardListener onKeyboardListener : arrayList) {
-            onKeyboardListener.onKeyboardChange(true, i);
+        for (Object obj : arrayList) {
+            ((OnKeyboardListener)obj).onKeyboardChange(true, i);
         }
         getBridgeView().postDelayed(() -> GameActivity.hideNavigationFullScreen(GameActivity.this.getBridgeView()), 100L);
     }
 
-    /* access modifiers changed from: protected */
     protected void onHideKeyboard() {
-        //imguiInput.setVisibility(View.GONE);
-        ArrayList<OnKeyboardListener> arrayList = this.mOnKeyboardListeners;
+        ArrayList arrayList = this.mOnKeyboardListeners;
         if (arrayList != null) {
-            for (OnKeyboardListener onKeyboardListener : arrayList) {
-                onKeyboardListener.onKeyboardChange(false, 0);
+            for (Object obj : arrayList) {
+                ((OnKeyboardListener)obj).onKeyboardChange(false, 0);
             }
         }
     }
@@ -668,14 +639,13 @@ public class GameActivity extends TGCNativeActivity {
     }
 
     public void RemoveOnKeyboardListener(OnKeyboardListener onKeyboardListener) {
-        ArrayList<OnKeyboardListener> arrayList = this.mOnKeyboardListeners;
+        ArrayList arrayList = this.mOnKeyboardListeners;
         if (arrayList != null) {
             arrayList.remove(onKeyboardListener);
         }
     }
 
-    /* access modifiers changed from: private */
-    public boolean isValidGameController(int i) {
+    private boolean isValidGameController(int i) {
         boolean z;
         InputDevice device = InputDevice.getDevice(i);
         if (device == null) {
@@ -817,13 +787,12 @@ public class GameActivity extends TGCNativeActivity {
                 this.m_lastDpadDirection = i;
                 return true;
             }
-            if ((motionEvent.getSource() & 16777232) == 16777232 && (motionEvent.getAction() & KotlinVersion.MAX_COMPONENT_VALUE) == 2) {
-                onStickEventNative(motionEvent.getAxisValue(0), motionEvent.getAxisValue(1), motionEvent.getAxisValue(11), motionEvent.getAxisValue(14));
-                return true;
-            }
+        }
+        if ((motionEvent.getSource() & 16777232) == 16777232 && (motionEvent.getAction() & KotlinVersion.MAX_COMPONENT_VALUE) == 2) {
+            onStickEventNative(motionEvent.getAxisValue(0), motionEvent.getAxisValue(1), motionEvent.getAxisValue(11), motionEvent.getAxisValue(14));
+            return true;
         }
         return super.onGenericMotionEvent(motionEvent);
-
     }
 
     public void addActivePanel(BasePanel basePanel) {
@@ -836,17 +805,17 @@ public class GameActivity extends TGCNativeActivity {
     }
 
     public void removeActivePanel(BasePanel basePanel) {
-        ArrayList<BasePanel> arrayList = this.mActivePanels;
+        ArrayList arrayList = this.mActivePanels;
         if (arrayList != null) {
             arrayList.remove(basePanel);
         }
     }
 
     public void dismissAllPanels() {
-        ArrayList<BasePanel> arrayList = this.mActivePanels;
+        ArrayList arrayList = this.mActivePanels;
         if (arrayList != null) {
-            for (BasePanel basePanel : arrayList) {
-                basePanel.dismiss();
+            for (Object obj : arrayList) {
+                ((BasePanel)obj).dismiss();
             }
         }
     }
@@ -1062,7 +1031,7 @@ public class GameActivity extends TGCNativeActivity {
     }
 
     public boolean tryReleaseLogoSound() {
-       if(m_mediaPlayer == null) {
+        if(m_mediaPlayer == null) {
             this.m_logoSoundReleased = true;
             return true;
         }
@@ -1084,19 +1053,16 @@ public class GameActivity extends TGCNativeActivity {
             alphaAnimation.setAnimationListener(new Animation.AnimationListener() {
                 @Override
                 public void onAnimationStart(Animation animation) {
-
                 }
 
                 @Override
                 public void onAnimationEnd(Animation animation) {
                     logoView.setVisibility(View.GONE);
-                    // TODO: Don't remove!
                     git.artdeell.skymodloader.MainActivity.lateInitUserLibs();
                 }
 
                 @Override
                 public void onAnimationRepeat(Animation animation) {
-
                 }
             });
             logoView.startAnimation(alphaAnimation);
@@ -1115,5 +1081,4 @@ public class GameActivity extends TGCNativeActivity {
             }
         }, 5000);
     }
-
 }

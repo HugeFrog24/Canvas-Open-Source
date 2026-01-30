@@ -15,13 +15,10 @@ import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.util.Log;
 import android.widget.Toast;
-
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
-
 import com.tgc.sky.BuildConfig;
 import com.tgc.sky.GameActivity;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -29,7 +26,6 @@ import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-
 import git.artdeell.skymodloader.elfmod.ElfRefcountLoader;
 import git.artdeell.skymodloader.iconloader.IconLoader;
 
@@ -44,11 +40,10 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         deviceInfo = getDeviceInfo();
         sharedPreferences = getSharedPreferences("package_configs", Context.MODE_PRIVATE);
-
         boolean logcatEnabled = sharedPreferences.getBoolean("logcat_enabled", false);
+
         if (logcatEnabled) {
             startLogcatMonitoring();
         }
@@ -98,6 +93,7 @@ public class MainActivity extends Activity {
             BuildConfig.VERSION_CODE = info.versionCode;
             String nativeLibraryDir = info.applicationInfo.nativeLibraryDir;
             String libPath = nativeLibraryDir;
+
             File libDir = new File(nativeLibraryDir);
             if (!libDir.exists() || libDir.listFiles() == null || libDir.listFiles().length == 0) {
                 libPath = extractLibrariesFromApk(info.applicationInfo);
@@ -107,11 +103,14 @@ public class MainActivity extends Activity {
             File configDir = new File(getFilesDir(), "config");
             if (!configDir.isDirectory() && !configDir.mkdirs())
                 throw new IOException("Failed to create mod configuration directory");
+
             android.util.Log.i("MainActivity", "Pre-loading FMOD dependencies from: " + libPath);
             org.fmod.FMOD.init(this);
+
             File fmodLibDir = new File(libPath);
             android.util.Log.i("MainActivity", "Listing all files in: " + libPath);
             File[] allFiles = fmodLibDir.listFiles();
+
             if (allFiles != null) {
                 for (File f : allFiles) {
                     android.util.Log.i("MainActivity", "Found file: " + f.getName());
@@ -126,6 +125,7 @@ public class MainActivity extends Activity {
                 "libfmod.so",
                 "libfmodstudio.so"
             };
+
             for (String libName : libsToLoad) {
                 File lib = new File(fmodLibDir, libName);
                 if (lib.exists()) {
@@ -141,9 +141,27 @@ public class MainActivity extends Activity {
                     android.util.Log.w("MainActivity", "Not found: " + libName + " at " + lib.getAbsolutePath());
                 }
             }
+
             ElfLoader loader = new ElfLoader(libPath + ":/system/lib64");
             loader.loadLib("libBootloader.so");
+
+            try {
+                android.util.Log.i("MainActivity", "Loading libktx_read.so dependency...");
+                System.loadLibrary("ktx_read");
+                android.util.Log.i("MainActivity", "Successfully loaded libktx_read.so");
+            } catch (UnsatisfiedLinkError e) {
+                android.util.Log.w("MainActivity", "libktx_read.so not found in system libs, trying direct load...");
+                File ktxLib = new File(fmodLibDir, "libktx_read.so");
+                if (ktxLib.exists()) {
+                    System.load(ktxLib.getAbsolutePath());
+                    android.util.Log.i("MainActivity", "Successfully loaded libktx_read.so from: " + ktxLib.getAbsolutePath());
+                } else {
+                    android.util.Log.e("MainActivity", "libktx_read.so not found at: " + ktxLib.getAbsolutePath());
+                }
+            }
+
             System.loadLibrary("ciphered");
+
             setDeviceInfoNative(
                 deviceInfo.xdpi,
                 deviceInfo.ydpi,
@@ -151,9 +169,11 @@ public class MainActivity extends Activity {
                 Optional.ofNullable(deviceInfo.deviceName).orElse(""),
                 Optional.ofNullable(deviceInfo.deviceManufacturer).orElse(""),
                 Optional.ofNullable(deviceInfo.deviceModel).orElse(""));
+
             IconLoader.findIcons();
             BuildConfig.VERSION_CODE = sharedPreferences.getBoolean("skip_updates", false) ? 0x99999 : info.versionCode;
             Integer gameType = skyPackages.getOrDefault(SKY_PACKAGE_NAME, 0);
+
             MainActivity.settle(
                 info.versionCode,
                 gameType == null ? 0 : gameType,
@@ -163,6 +183,7 @@ public class MainActivity extends Activity {
                 ceserverEnabled,
                 hideCanvasMenu
             );
+
             if (sharedPreferences.getBoolean("custom_server", false)) {
                 BuildConfig.SKY_SERVER_HOSTNAME = sharedPreferences.getString("server_host",
                     BuildConfig.SKY_SERVER_HOSTNAME);
@@ -172,6 +193,7 @@ public class MainActivity extends Activity {
             new ElfRefcountLoader(libPath + ":/system/lib64", modsDir).load();
             BuildConfig.APPLICATION_ID = SKY_PACKAGE_NAME;
             startActivity(new Intent(this, GameActivity.class));
+
         } catch (PackageManager.NameNotFoundException e) {
             alertDialog(getString(R.string.sky_not_installed));
         } catch (Throwable e) {
@@ -188,6 +210,7 @@ public class MainActivity extends Activity {
         android.util.Log.i("MainActivity", "Looking for split APKs...");
         android.util.Log.i("MainActivity", "sourceDir: " + appInfo.sourceDir);
         String[] splitSourceDirs = appInfo.splitSourceDirs;
+
         if (splitSourceDirs != null) {
             android.util.Log.i("MainActivity", "Found " + splitSourceDirs.length + " split APKs");
             for (String splitApk : splitSourceDirs) {
@@ -211,12 +234,15 @@ public class MainActivity extends Activity {
         java.util.zip.ZipFile zipFile = new java.util.zip.ZipFile(apkPath);
         java.util.Enumeration<? extends java.util.zip.ZipEntry> entries = zipFile.entries();
         int libCount = 0;
+
         while (entries.hasMoreElements()) {
             java.util.zip.ZipEntry entry = entries.nextElement();
             String name = entry.getName();
+
             if (name.startsWith("lib/arm64-v8a/") && name.endsWith(".so")) {
                 String libName = name.substring(name.lastIndexOf('/') + 1);
                 File destFile = new File(destDir, libName);
+
                 if (!destFile.exists()) {
                     try (java.io.InputStream in = zipFile.getInputStream(entry);
                          java.io.FileOutputStream out = new java.io.FileOutputStream(destFile)) {
@@ -291,6 +317,7 @@ public class MainActivity extends Activity {
         deviceInfo.ydpi = displayMetrics.ydpi;
         deviceInfo.density = displayMetrics.density;
         deviceInfo.deviceName = Settings.Global.getString(getContentResolver(), "device_name");
+
         if (deviceInfo.deviceName == null || deviceInfo.deviceName.isEmpty()) {
             deviceInfo.deviceName = Settings.Secure.getString(getContentResolver(), "bluetooth_name");
         }

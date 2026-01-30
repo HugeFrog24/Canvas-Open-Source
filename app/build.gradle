@@ -23,7 +23,7 @@ android {
         applicationId "git.artdeell.skymodloader"
         minSdk 26
         targetSdk 34
-        versionCode 54
+        versionCode 55
         versionName "1.7.0TEST"
 
         externalNativeBuild {
@@ -69,6 +69,7 @@ dependencies {
     implementation( platform 'org.jetbrains.kotlin:kotlin-bom:1.8.0')
 
     implementation 'com.google.android.material:material:1.11.0'
+	implementation 'com.android.billingclient:billing:5.1.0'
     implementation 'net.fornwall:jelf:0.9.0'
     implementation 'androidx.localbroadcastmanager:localbroadcastmanager:1.1.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
