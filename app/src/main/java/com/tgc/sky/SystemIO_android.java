@@ -163,6 +163,7 @@ public class SystemIO_android {
 
     SystemIO_android(GameActivity gameActivity) {
         this.m_activity = gameActivity;
+		DeviceKey.setContext(gameActivity.getApplicationContext());
         boolean z = false;
         this.m_isOtherAudioPlaying = false;
         this.m_isPhonecallActive = false;

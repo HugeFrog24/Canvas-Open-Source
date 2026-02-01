@@ -1,49 +1,43 @@
 package com.tgc.sky.io;
 
-import android.os.Build;
-import android.security.keystore.KeyGenParameterSpec;
-import android.security.keystore.KeyProperties;
+import android.content.Context;
 import android.util.Base64;
-import java.io.IOException;
-import java.math.BigInteger;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.security.AlgorithmParameters;
-import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.security.Signature;
 import java.security.SignatureException;
-import java.security.UnrecoverableEntryException;
-import java.security.cert.Certificate;
-import java.security.cert.CertificateException;
 import java.security.interfaces.ECPublicKey;
 import java.security.spec.ECGenParameterSpec;
 import java.security.spec.ECParameterSpec;
 import java.security.spec.ECPoint;
 import java.security.spec.ECPublicKeySpec;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.InvalidParameterSpecException;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.X509EncodedKeySpec;
+import java.math.BigInteger;
 import java.util.Arrays;
-import java.util.Date;
-import java.util.Random;
-import javax.security.auth.x500.X500Principal;
 
-/* renamed from: com.tgc.sky.io.DeviceKey */
 public class DeviceKey {
-    private static final String ANDROID_KEY_STORE = "AndroidKeyStore";
     private static final BigInteger CURVE_A = new BigInteger("3", 10);
     private static final BigInteger CURVE_B = new BigInteger("5AC635D8AA3A93E7B3EBBD55769886BC651D06B0CC53B0F63BCE3C3E27D2604B", 16);
     private static final BigInteger MODULUS = new BigInteger("FFFFFFFF00000001000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFF", 16);
-    private static final String kDeviceKeyAlias = "com.tgc.sky.devicekey";
+    private static final String PRIVATE_KEY_FILE = "device_private.key";
+    private static final String PUBLIC_KEY_FILE = "device_public.key";
+    private static Context sContext;
+
+    public static void setContext(Context context) {
+        sContext = context;
+    }
 
     public static boolean Delete() {
         DeleteKeyPair();
@@ -106,22 +100,76 @@ public class DeviceKey {
     }
 
     private static KeyPair GetKeyPair() {
-        PrivateKey GetPrivateKey = GetPrivateKey();
-        PublicKey GetPublicKey = GetPublicKey();
-        if (GetPrivateKey != null && GetPublicKey != null) {
-            return new KeyPair(GetPublicKey, GetPrivateKey);
+        if (sContext == null) {
+            return CreateKeyPairLegacy();
         }
-        DeleteKeyPair();
+        
+        try {
+            File filesDir = sContext.getFilesDir();
+            File privateKeyFile = new File(filesDir, PRIVATE_KEY_FILE);
+            File publicKeyFile = new File(filesDir, PUBLIC_KEY_FILE);
+            
+            if (privateKeyFile.exists() && publicKeyFile.exists()) {
+                FileInputStream privateFis = new FileInputStream(privateKeyFile);
+                byte[] privateKeyBytes = new byte[(int) privateKeyFile.length()];
+                privateFis.read(privateKeyBytes);
+                privateFis.close();
+                
+                FileInputStream publicFis = new FileInputStream(publicKeyFile);
+                byte[] publicKeyBytes = new byte[(int) publicKeyFile.length()];
+                publicFis.read(publicKeyBytes);
+                publicFis.close();
+                
+                KeyFactory keyFactory = KeyFactory.getInstance("EC");
+                PKCS8EncodedKeySpec privSpec = new PKCS8EncodedKeySpec(privateKeyBytes);
+                X509EncodedKeySpec pubSpec = new X509EncodedKeySpec(publicKeyBytes);
+                
+                PrivateKey privateKey = keyFactory.generatePrivate(privSpec);
+                PublicKey publicKey = keyFactory.generatePublic(pubSpec);
+                
+                return new KeyPair(publicKey, privateKey);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            DeleteKeyPair();
+        }
+        
         return CreateKeyPair();
     }
 
     private static KeyPair CreateKeyPair() {
+        if (sContext == null) {
+            return CreateKeyPairLegacy();
+        }
+        
         try {
-            KeyPairGenerator instance = KeyPairGenerator.getInstance("EC", ANDROID_KEY_STORE);
-            long currentTimeMillis = System.currentTimeMillis();
-            instance.initialize(new KeyGenParameterSpec.Builder(kDeviceKeyAlias, KeyProperties.PURPOSE_ENCRYPT | KeyProperties.PURPOSE_SIGN).setRandomizedEncryptionRequired(false).setAlgorithmParameterSpec(new ECGenParameterSpec("secp256r1")).setDigests(new String[]{"SHA-256", "SHA-512"}).setKeySize(256).setSignaturePaddings(new String[]{"PKCS1"}).setCertificateSubject(new X500Principal("CN=Android, O=Android Authority")).setCertificateSerialNumber(new BigInteger(256, new Random())).setCertificateNotBefore(new Date(currentTimeMillis - (currentTimeMillis % 1000))).setCertificateNotAfter(new Date(new Date(currentTimeMillis - (currentTimeMillis % 1000)).getTime() + 3155673600000L)).build());
+            KeyPairGenerator instance = KeyPairGenerator.getInstance("EC");
+            instance.initialize(new ECGenParameterSpec("secp256r1"));
+            KeyPair kp = instance.generateKeyPair();
+            
+            File filesDir = sContext.getFilesDir();
+            
+            FileOutputStream privateFos = new FileOutputStream(new File(filesDir, PRIVATE_KEY_FILE));
+            privateFos.write(kp.getPrivate().getEncoded());
+            privateFos.close();
+            
+            FileOutputStream publicFos = new FileOutputStream(new File(filesDir, PUBLIC_KEY_FILE));
+            publicFos.write(kp.getPublic().getEncoded());
+            publicFos.close();
+            
+            return kp;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return CreateKeyPairLegacy();
+        }
+    }
+
+    private static KeyPair CreateKeyPairLegacy() {
+        try {
+            KeyPairGenerator instance = KeyPairGenerator.getInstance("EC");
+            instance.initialize(new ECGenParameterSpec("secp256r1"));
             return instance.generateKeyPair();
-        } catch (InvalidAlgorithmParameterException | NoSuchAlgorithmException | NoSuchProviderException e) {
+        } catch (Exception e) {
             e.printStackTrace();
             return null;
         }
@@ -129,51 +177,19 @@ public class DeviceKey {
 
     private static void DeleteKeyPair() {
         try {
-            KeyStore instance = KeyStore.getInstance(ANDROID_KEY_STORE);
-            instance.load((KeyStore.LoadStoreParameter) null);
-            instance.deleteEntry(kDeviceKeyAlias);
-        } catch (IOException | KeyStoreException | NoSuchAlgorithmException | CertificateException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private static PrivateKey GetPrivateKey() {
-        try {
-            KeyStore instance = KeyStore.getInstance(ANDROID_KEY_STORE);
-            instance.load((KeyStore.LoadStoreParameter) null);
-            if (Build.VERSION.SDK_INT >= 28) {
-                return (PrivateKey) instance.getKey(kDeviceKeyAlias, (char[]) null);
-            }
-            KeyStore.PrivateKeyEntry privateKeyEntry = (KeyStore.PrivateKeyEntry) instance.getEntry(kDeviceKeyAlias, (KeyStore.ProtectionParameter) null);
-            if (privateKeyEntry != null) {
-                return privateKeyEntry.getPrivateKey();
-            }
-            return null;
-        } catch (IOException | KeyStoreException | NoSuchAlgorithmException | UnrecoverableEntryException | CertificateException e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
-    private static PublicKey GetPublicKey() {
-        Certificate certificate;
-        try {
-            KeyStore instance = KeyStore.getInstance(ANDROID_KEY_STORE);
-            instance.load((KeyStore.LoadStoreParameter) null);
-            if (Build.VERSION.SDK_INT < 28) {
-                KeyStore.PrivateKeyEntry privateKeyEntry = (KeyStore.PrivateKeyEntry) instance.getEntry(kDeviceKeyAlias, (KeyStore.ProtectionParameter) null);
-                if (privateKeyEntry != null) {
-                    return privateKeyEntry.getCertificate().getPublicKey();
+            if (sContext != null) {
+                File filesDir = sContext.getFilesDir();
+                File privateKeyFile = new File(filesDir, PRIVATE_KEY_FILE);
+                File publicKeyFile = new File(filesDir, PUBLIC_KEY_FILE);
+                if (privateKeyFile.exists()) {
+                    privateKeyFile.delete();
                 }
-                return null;
-            } else if (!instance.containsAlias(kDeviceKeyAlias) || (certificate = instance.getCertificate(kDeviceKeyAlias)) == null) {
-                return null;
-            } else {
-                return certificate.getPublicKey();
+                if (publicKeyFile.exists()) {
+                    publicKeyFile.delete();
+                }
             }
-        } catch (IOException | KeyStoreException | NoSuchAlgorithmException | UnrecoverableEntryException | CertificateException e) {
+        } catch (Exception e) {
             e.printStackTrace();
-            return null;
         }
     }
 
@@ -214,14 +230,13 @@ public class DeviceKey {
             AlgorithmParameters instance = AlgorithmParameters.getInstance("EC");
             instance.init(new ECGenParameterSpec("secp256r1"));
             return KeyFactory.getInstance("EC").generatePublic(new ECPublicKeySpec(eCPoint, (ECParameterSpec) instance.getParameterSpec(ECParameterSpec.class)));
-        } catch (NoSuchAlgorithmException | InvalidKeySpecException | InvalidParameterSpecException e) {
+        } catch (Exception e) {
             e.printStackTrace();
             return null;
         }
     }
 
     private static BigInteger sqrtMod(BigInteger bigInteger) {
-        BigInteger bigInteger2 = MODULUS;
         return bigInteger.modPow(MODULUS.add(BigInteger.ONE).shiftRight(2), MODULUS);
     }
 }

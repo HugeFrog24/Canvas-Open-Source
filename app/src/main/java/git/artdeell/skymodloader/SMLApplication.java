@@ -5,16 +5,16 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.res.Resources;
 import android.content.Context;
-
 import android.os.Build;
+import android.util.Log;
 
 public class SMLApplication extends Application {
     public static final String MOD_UPDATER_SERVICE_NOTIFICATION_CHANNEL = "canvas_mod_updater_service_notif_ch";
-
     private static SMLApplication smlApplication;
     public static String skyPName;
     public static Resources skyRes;
     public static Resources smlRes;
+
     public static SMLApplication deez() {
         return smlApplication;
     }
@@ -22,24 +22,23 @@ public class SMLApplication extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+        Log.i("Canvas", "SMLApplication.onCreate() called");
         smlApplication = this;
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationManager notifManager = ((NotificationManager)this.getSystemService(Context.NOTIFICATION_SERVICE));
-
             NotificationChannel notifChannel = notifManager.getNotificationChannel(MOD_UPDATER_SERVICE_NOTIFICATION_CHANNEL);
-
             if (notifChannel == null) {
                 notifChannel = new NotificationChannel(
-                        MOD_UPDATER_SERVICE_NOTIFICATION_CHANNEL,
-                        "Mod Updater Status",
-                        NotificationManager.IMPORTANCE_MIN
+                    MOD_UPDATER_SERVICE_NOTIFICATION_CHANNEL,
+                    "Mod Updater Status",
+                    NotificationManager.IMPORTANCE_MIN
                 );
                 notifChannel.setDescription("Notification showing the state of mod update");
-
                 notifManager.createNotificationChannel(notifChannel);
             }
         }
+
     }
 
     @Override
