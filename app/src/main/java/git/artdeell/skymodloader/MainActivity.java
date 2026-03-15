@@ -104,6 +104,28 @@ public class MainActivity extends Activity {
         }
     }
 
+    private void loadCppShared(String libPath) {
+        try {
+            System.loadLibrary("c++_shared");
+            Log.i("MainActivity", "libc++_shared loaded via loadLibrary");
+            return;
+        } catch (UnsatisfiedLinkError e) {
+            Log.w("MainActivity", "loadLibrary c++_shared failed, trying from libPath: " + e.getMessage());
+        }
+        try {
+            if (libPath.contains("!/lib")) {
+                System.load(libPath + "/libc++_shared.so");
+            } else {
+                File lib = new File(libPath, "libc++_shared.so");
+                if (lib.exists()) System.load(lib.getAbsolutePath());
+                else Log.w("MainActivity", "libc++_shared.so not found at: " + lib.getAbsolutePath());
+            }
+            Log.i("MainActivity", "libc++_shared loaded via fallback path");
+        } catch (UnsatisfiedLinkError e) {
+            Log.w("MainActivity", "libc++_shared fallback also failed, continuing: " + e.getMessage());
+        }
+    }
+
     private void loadGame() {
         PackageManager pm = getPackageManager();
         try {
@@ -141,8 +163,9 @@ public class MainActivity extends Activity {
                 Log.i("MainActivity", "Loading libs directly from APK (no extraction)");
             }
 
+            loadCppShared(libPath);
+
             String[] libsToLoad = {
-                "libc++_shared.so",
                 "libOpenSLES.so",
                 "libfmod.so",
                 "libfmodstudio.so"
@@ -169,7 +192,7 @@ public class MainActivity extends Activity {
                 }
             }
 
-            ElfLoader loader = new ElfLoader(elfLibPath + ":/system/lib64");
+            ElfLoader loader = new ElfLoader(elfLibPath);
             loader.loadLib("libBootloader.so");
             System.loadLibrary("ciphered");
 
@@ -207,7 +230,7 @@ public class MainActivity extends Activity {
                 MainActivity.customServer(BuildConfig.SKY_SERVER_HOSTNAME);
             }
 
-            new ElfRefcountLoader(elfLibPath + ":/system/lib64", modsDir).load();
+            new ElfRefcountLoader(elfLibPath, modsDir).load();
             BuildConfig.APPLICATION_ID = SKY_PACKAGE_NAME;
             startActivity(new Intent(this, GameActivity.class));
 
