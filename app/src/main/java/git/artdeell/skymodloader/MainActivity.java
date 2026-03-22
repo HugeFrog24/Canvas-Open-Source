@@ -139,6 +139,7 @@ public class MainActivity extends Activity {
 
             String libPath = resolveLibPath(info.applicationInfo);
             String elfLibPath = resolveElfLibPath(info.applicationInfo, libPath);
+            Log.i("MainActivity", "elfLibPath: " + elfLibPath);
 
             File modsDir = new File(getFilesDir(), "mods");
             File configDir = new File(getFilesDir(), "config");
@@ -327,12 +328,15 @@ public class MainActivity extends Activity {
         }
 
         if (bootloaderFile.exists()) {
-            Log.i("MainActivity", "Sky updated (v" + lastExtractedVersion + " → v" + currentVersion + "), re-extraction of libBootloader.so");
-            bootloaderFile.delete();
-        }
+			Log.i("MainActivity", "Sky updated (v" + lastExtractedVersion + " → v" + currentVersion + "), re-extraction");
+			bootloaderFile.delete();
+			for (String dep : new String[]{"libfmod.so", "libfmodstudio.so", "libc++_shared.so"}) {
+				new File(extractDir, dep).delete();
+				}
+		}
 
         String apkPath = mainLibPath.substring(0, mainLibPath.indexOf("!/lib"));
-        Log.i("MainActivity", "Extracting libBootloader.so from: " + apkPath);
+        Log.i("MainActivity", "Extracting native libs from: " + apkPath);
         try (java.util.zip.ZipFile zipFile = new java.util.zip.ZipFile(apkPath)) {
             java.util.zip.ZipEntry entry = zipFile.getEntry("lib/arm64-v8a/libBootloader.so");
             if (entry == null) throw new IOException("libBootloader.so not found in APK");
@@ -345,6 +349,27 @@ public class MainActivity extends Activity {
             bootloaderFile.setExecutable(true);
             bootloaderFile.setReadable(true);
             Log.i("MainActivity", "libBootloader.so extracted (v" + currentVersion + ")");
+
+            String[] deps = {"libfmod.so", "libfmodstudio.so", "libc++_shared.so"};
+            for (String dep : deps) {
+                File depFile = new File(extractDir, dep);
+                if (!depFile.exists()) {
+                    java.util.zip.ZipEntry depEntry = zipFile.getEntry("lib/arm64-v8a/" + dep);
+                    if (depEntry != null) {
+                        try (java.io.InputStream in = zipFile.getInputStream(depEntry);
+                             java.io.FileOutputStream out = new java.io.FileOutputStream(depFile)) {
+                            byte[] buf = new byte[8192];
+                            int read;
+                            while ((read = in.read(buf)) != -1) out.write(buf, 0, read);
+                        }
+                        depFile.setExecutable(true);
+                        depFile.setReadable(true);
+                        Log.i("MainActivity", dep + " extracted as ElfLoader dependency");
+                    } else {
+                        Log.w("MainActivity", dep + " not found in APK");
+                    }
+                }
+            }
         }
 
         sharedPreferences.edit().putInt("bootloader_version", currentVersion).apply();
@@ -497,4 +522,13 @@ public class MainActivity extends Activity {
     public static native void lateInitUserLibs();
     public static native void getSysetemUI(Object systemUI);
     private static native void nativeSetSkyBuildKey(String key);
+
+    public static class DeviceInfo {
+        public float xdpi;
+        public float ydpi;
+        public float density;
+        public String deviceName;
+        public String deviceManufacturer;
+        public String deviceModel;
+    }
 }
