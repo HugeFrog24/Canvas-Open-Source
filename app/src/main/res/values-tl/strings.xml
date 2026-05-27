@@ -41,7 +41,7 @@
     <string name="check_updates_title">Gusto mo bang suriin at i-check kung ang [%1$s] ay may update?</string>
     <string name="check_updates_failed_title">Bigo ang pagsusuri</string>
     <string name="updating_failed_title">"Bigo sa pag-update"</string>
-    <string name="check_updates_message">Paalala: Magsisimula ang update kung OK lang sa'yo.</string>
+    <string name="check_updates_message">Paalala: Magsisimula ang update kung OK lang sa\'yo.</string>
     <string name="check_button_text">Check</string>
     <string name="version_info" translatable="false">Version: %s\n%s</string>
     <string name="update_dialog_title">%s May nang bagong update!!</string>
