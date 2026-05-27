@@ -23,7 +23,7 @@ android {
         applicationId "git.artdeell.skymodloader"
         minSdk 26
         targetSdk 34
-        versionCode 61
+        versionCode 62
         versionName "1.7.6"
 
         externalNativeBuild {
