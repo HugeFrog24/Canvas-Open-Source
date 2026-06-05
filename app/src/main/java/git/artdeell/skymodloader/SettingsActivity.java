@@ -43,7 +43,7 @@ public class SettingsActivity extends AppCompatActivity {
         hideCanvasMenuSwitch = findViewById(R.id.mm_hideCanvasMenu);
         ceserverSwitch = findViewById(R.id.mm_enableCeserver);
         customServerSwitch = findViewById(R.id.mm_enableCustomServer);
-        starwatchSwitch = findViewById(R.id.mm_allowStarwatch);
+        starwatchSwitch = findViewById(R.id.mm_blockStarwatch);
         logcatSwitch = findViewById(R.id.mm_enableLogcat);
         serverUrlInput = findViewById(R.id.server_url_input);
 
@@ -71,11 +71,11 @@ public class SettingsActivity extends AppCompatActivity {
         );
 
         starwatchSwitch.setChecked(getSharedPreferences(StarwatchBlocker.PREFS_NAME, MODE_PRIVATE)
-            .getBoolean(StarwatchBlocker.PREF_ALLOW_STARWATCH, false));
+            .getBoolean(StarwatchBlocker.PREF_BLOCK_STARWATCH, false));
         starwatchSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
             getSharedPreferences(StarwatchBlocker.PREFS_NAME, MODE_PRIVATE)
-                .edit().putBoolean(StarwatchBlocker.PREF_ALLOW_STARWATCH, isChecked).apply();
-            StarwatchBlocker.setStarwatchAllowed(isChecked);
+                .edit().putBoolean(StarwatchBlocker.PREF_BLOCK_STARWATCH, isChecked).apply();
+            StarwatchBlocker.setStarwatchBlocked(isChecked);
         });
 
         serverUrlInput.setText(getSharedPreferences("package_configs", MODE_PRIVATE)

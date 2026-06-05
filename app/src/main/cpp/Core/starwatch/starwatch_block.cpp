@@ -27,7 +27,7 @@ static ssize_t (*orig_sendto)(int, const void *, size_t, int,
 
 static std::mutex g_mtx;
 static std::set<int> g_blocked_fds;
-static std::atomic_bool g_starwatch_allowed{false};
+static std::atomic_bool g_starwatch_allowed{true};
 
 PRIVATE_API static bool block_is_enabled() {
     return !g_starwatch_allowed.load(std::memory_order_relaxed);

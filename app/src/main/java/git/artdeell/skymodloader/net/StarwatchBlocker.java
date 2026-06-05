@@ -27,20 +27,20 @@ public final class StarwatchBlocker {
     private static final String TAG = "StarwatchBlocker";
     private static final String BLOCKED_KEYWORD = "starwatch";
     public static final String PREFS_NAME = "package_configs";
-    public static final String PREF_ALLOW_STARWATCH = "allow_starwatch";
+    public static final String PREF_BLOCK_STARWATCH = "block_starwatch";
 
-    private static volatile boolean starwatchAllowed = false;
+    private static volatile boolean starwatchAllowed = true;
 
     private StarwatchBlocker() {}
 
     public static void init(Context context) {
         SharedPreferences preferences = context.getApplicationContext()
                 .getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-        setStarwatchAllowed(preferences.getBoolean(PREF_ALLOW_STARWATCH, false));
+        setStarwatchBlocked(preferences.getBoolean(PREF_BLOCK_STARWATCH, false));
     }
 
-    public static void setStarwatchAllowed(boolean allowed) {
-        starwatchAllowed = allowed;
+    public static void setStarwatchBlocked(boolean blocked) {
+        starwatchAllowed = !blocked;
     }
 
     public static boolean shouldBlock(String urlOrHost) {

@@ -108,6 +108,7 @@
     <string name="section_developer_options">Fejlesztői beállítások</string>
     <string name="cheat_engine_server">Csalómotor-kiszolgáló (cheatengine)</string>
     <string name="custom_server">Egyéni szerver</string>
+    <string name="block_starwatch">Starwatch blokkolása</string>
     <string name="server_url">Szerver URL-címe</string>
     <string name="server_url_hint" translatable="false">insert-url</string>
     <string name="enable_logcat_monitoring">Logcat-figyelés engedélyezése</string>

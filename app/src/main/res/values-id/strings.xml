@@ -110,6 +110,7 @@
     <string name="section_developer_options">Opsi Pengembang</string>
     <string name="cheat_engine_server">Server Cheat Engine</string>
     <string name="custom_server">Server kustom</string>
+    <string name="block_starwatch">Blokir Starwatch</string>
     <string name="server_url">URL Server</string>
     <string name="server_url_hint" translatable="false">masukkan-url</string>
     <string name="enable_logcat_monitoring">Aktifkan Pemantauan Logcat</string>

@@ -108,6 +108,7 @@
     <string name="section_developer_options">خيارات المطور</string>
     <string name="cheat_engine_server">خادم محرك الغش</string>
     <string name="custom_server">خادم مخصص</string>
+    <string name="block_starwatch">حظر Starwatch</string>
     <string name="server_url">رابط الخادم</string>
     <string name="server_url_hint" translatable="false">أدخل-الرابط</string>
     <string name="enable_logcat_monitoring">تفعيل مراقبة السجل</string>

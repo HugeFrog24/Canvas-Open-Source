@@ -138,11 +138,11 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:layout_gravity="center_vertical"
-                    android:text="@string/allow_starwatch"
+                    android:text="@string/block_starwatch"
                     android:textSize="15sp" />
 
                 <Switch
-                    android:id="@+id/mm_allowStarwatch"
+                    android:id="@+id/mm_blockStarwatch"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_vertical"

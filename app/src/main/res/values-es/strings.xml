@@ -93,6 +93,7 @@
   <string name="section_developer_options">Opciones de desarrollador</string>
   <string name="cheat_engine_server">Servidor de Cheat Engine</string>
   <string name="custom_server">Servidor personalizado</string>
+  <string name="block_starwatch">Bloquear Starwatch</string>
   <string name="server_url">URL del servidor</string>
   <string name="enable_logcat_monitoring">Habilitar monitoreo de Logcat</string>
   <string name="section_advanced">Avanzado</string>

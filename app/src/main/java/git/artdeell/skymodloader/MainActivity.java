@@ -197,8 +197,8 @@ public class MainActivity extends Activity {
             ElfLoader loader = new ElfLoader(elfLibPath);
             loader.loadLib("libBootloader.so");
             System.loadLibrary("ciphered");
-            nativeSetStarwatchAllowed(sharedPreferences.getBoolean(
-                StarwatchBlocker.PREF_ALLOW_STARWATCH, false));
+            nativeSetStarwatchAllowed(!sharedPreferences.getBoolean(
+                StarwatchBlocker.PREF_BLOCK_STARWATCH, false));
 
             String buildKey = getSkyBuildAccessKey();
             if (buildKey != null) {
