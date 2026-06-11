@@ -163,4 +163,21 @@
     <string name="online_count">%s online</string>
     <string name="loading_server">Loading…</string>
     <string name="error_loading_server">Could not load server info</string>
+
+    <!-- import offsets -->
+    <string name="import_offsets">Import Offsets</string>
+    <string name="onboarding_offsets_title">What are Offsets?</string>
+    <string name="onboarding_offsets_body">Offsets are memory addresses used by mods to interact with the game. When the game updates, these addresses change.\n\nImporting updated offset files allows your mods to support newer game versions immediately without waiting for a mod update.</string>
+    <string name="offsets_note">Not every mod supports this feature</string>
+    <string name="offsets_import_desc">Select a mod and pick an offset file</string>
+    <string name="offsets_discord_desc">Get help finding offset files</string>
+    <string name="onboarding_offsets_message">Offsets are memory addresses used by mods to interact with the game. When the game updates, these addresses change. Importing updated offset files allows your mods to support newer game versions immediately without waiting for a mod update.\n\n<b>NOTE: NOT EVERY MOD SUPPORTS THIS FEATURE.</b>\n\nIf you need help finding offset files, join our Discord server.</string>
+    <string name="join_discord">Join Discord</string>
+    <string name="select_mod_title">Select Mod</string>
+    <string name="offsets_select_mod_desc">Choose which mod to apply the offset file to</string>
+    <string name="no_mods_installed">Please install a mod first!</string>
+    <string name="overwrite_offsets_title">Overwrite Offsets?</string>
+    <string name="overwrite_offsets_message">An offsets file for %1$s already exists. Do you want to overwrite it?</string>
+    <string name="toast_offsets_imported">Offsets imported successfully for %1$s</string>
+    <string name="toast_offsets_import_failed">Failed to import offsets: %1$s</string>
 </resources>

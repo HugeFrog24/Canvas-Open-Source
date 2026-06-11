@@ -285,11 +285,24 @@
                             android:layout_width="0dp"
                             android:layout_height="54dp"
                             android:layout_weight="1"
-                            android:layout_marginEnd="8dp"
+                            android:layout_marginEnd="4dp"
                             android:background="@drawable/buttons"
                             android:onClick="onAddMod"
                             android:text="@string/add_mod"
-                            android:textSize="13sp"
+                            android:textSize="12sp"
+                            android:gravity="center" />
+
+                        <Button
+                            android:id="@+id/mm_importOffsets"
+                            android:layout_width="0dp"
+                            android:layout_height="54dp"
+                            android:layout_weight="1"
+                            android:layout_marginStart="4dp"
+                            android:layout_marginEnd="8dp"
+                            android:background="@drawable/buttons"
+                            android:onClick="onImportOffsetsClick"
+                            android:text="@string/import_offsets"
+                            android:textSize="12sp"
                             android:gravity="center" />
 
                         <Button

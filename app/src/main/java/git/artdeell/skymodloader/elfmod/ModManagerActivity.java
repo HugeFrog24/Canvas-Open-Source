@@ -3,14 +3,18 @@ package git.artdeell.skymodloader.elfmod;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.net.Uri;
+import android.text.Html;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.Window;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
@@ -46,6 +50,8 @@ import git.artdeell.skymodloader.updater.VersionNumber;
 
 public class ModManagerActivity extends Activity implements LoadingListener, ModUpdater {
     private static final int REQUEST_MOD = 1024 * 121;
+    private static final int REQUEST_IMPORT_OFFSETS = 1024 * 122;
+    private ElfModUIMetadata pendingOffsetsMod;
     @SuppressLint("StaticFieldLeak")
     private static ElfUIBackbone loader;
     private RecyclerView modListView;
@@ -253,6 +259,8 @@ public class ModManagerActivity extends Activity implements LoadingListener, Mod
             } catch (FileNotFoundException e) {
                 Toast.makeText(this, R.string.mod_ioe, Toast.LENGTH_SHORT).show();
             }
+        } else if (requestCode == REQUEST_IMPORT_OFFSETS && resultCode == Activity.RESULT_OK && data != null) {
+            handleOffsetFileResult(data.getData());
         }
     }
 
@@ -305,13 +313,16 @@ public class ModManagerActivity extends Activity implements LoadingListener, Mod
 
     @Override
     public void signalModRemovalError() {
-        runOnUiThread(() ->
-            new AlertDialog.Builder(this)
-                .setTitle(R.string.mod_remove_unable)
-                .setMessage(R.string.mod_ioe)
-                .setPositiveButton(android.R.string.ok, (d, w) -> {})
-                .show()
-        );
+        runOnUiThread(() -> {
+            DialogY dialogY = DialogY.createFromActivity(this);
+            dialogY.title.setText(R.string.mod_remove_unable);
+            dialogY.content.setText(R.string.mod_ioe);
+            dialogY.positiveButton.setVisibility(View.GONE);
+            dialogY.negativeButton.setText(android.R.string.ok);
+            dialogY.negativeButton.setOnClickListener(v -> dialogY.dialog.dismiss());
+            dialogY.dialog.setCancelable(true);
+            dialogY.dialog.show();
+        });
     }
 
     private void handleException() {
@@ -354,12 +365,18 @@ public class ModManagerActivity extends Activity implements LoadingListener, Mod
             sb.append(getString(R.string.mod_remove_dep, ModListAdapter.getVisibleModName(meta)));
             sb.append('\n');
         }
-        new AlertDialog.Builder(this)
-            .setTitle(R.string.mod_remove_unable)
-            .setMessage(sb.toString())
-            .setPositiveButton(android.R.string.ok, (d, w) -> loader.resetModRemovalMetadata())
-            .setOnCancelListener(d -> loader.resetModRemovalMetadata())
-            .show();
+        DialogY dialogY = DialogY.createFromActivity(this);
+        dialogY.title.setText(R.string.mod_remove_unable);
+        dialogY.content.setText(sb.toString());
+        dialogY.positiveButton.setVisibility(View.GONE);
+        dialogY.negativeButton.setText(android.R.string.ok);
+        dialogY.negativeButton.setOnClickListener(v -> {
+            dialogY.dialog.dismiss();
+            loader.resetModRemovalMetadata();
+        });
+        dialogY.dialog.setOnCancelListener(d -> loader.resetModRemovalMetadata());
+        dialogY.dialog.setCancelable(true);
+        dialogY.dialog.show();
     }
 
     private void handleLoading() {
@@ -395,6 +412,157 @@ public class ModManagerActivity extends Activity implements LoadingListener, Mod
 
     public void onExtraSettingsDialog(View view) {
         startActivity(new Intent(this, SettingsActivity.class));
+    }
+
+    public void onImportOffsetsClick(View view) {
+        if (loader == null || loader.getModsCount() == 0) {
+            Toast.makeText(this, R.string.no_mods_installed, Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        Dialog dialog = new Dialog(this);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setContentView(R.layout.dialog_import_offsets);
+        dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        dialog.getWindow().setLayout(
+            (int) (getResources().getDisplayMetrics().widthPixels * 0.88),
+            android.view.ViewGroup.LayoutParams.WRAP_CONTENT
+        );
+
+        ((TextView) dialog.findViewById(R.id.dialog_offsets_body))
+            .setText(R.string.onboarding_offsets_body);
+
+        dialog.findViewById(R.id.dialog_offsets_import)
+            .setOnClickListener(v -> {
+                dialog.dismiss();
+                showModSelectorForOffsets();
+            });
+
+        dialog.findViewById(R.id.dialog_offsets_discord)
+            .setOnClickListener(v -> {
+                startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://discord.gg/FrHP57VRPs")));
+            });
+
+        dialog.findViewById(R.id.dialog_offsets_cancel)
+            .setOnClickListener(v -> dialog.dismiss());
+
+        dialog.show();
+    }
+
+    private void showModSelectorForOffsets() {
+        int count = loader.getModsCount();
+
+        Dialog dialog = new Dialog(this);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setContentView(R.layout.dialog_select_mod);
+        dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        dialog.getWindow().setLayout(
+            (int) (getResources().getDisplayMetrics().widthPixels * 0.88),
+            android.view.ViewGroup.LayoutParams.WRAP_CONTENT
+        );
+
+        LinearLayout modList = dialog.findViewById(R.id.dialog_mod_list);
+
+        for (int i = 0; i < count; i++) {
+            final int index = i;
+            String name = ModListAdapter.getVisibleModName(loader.getMod(i));
+
+            LinearLayout row = new LinearLayout(this);
+            row.setOrientation(LinearLayout.HORIZONTAL);
+            row.setGravity(android.view.Gravity.CENTER_VERTICAL);
+            row.setBackgroundResource(R.drawable.buttons);
+            int padding = dp(14);
+            row.setPadding(padding, padding, padding, padding);
+            row.setClickable(true);
+            row.setFocusable(true);
+
+            LinearLayout.LayoutParams rowParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            );
+            rowParams.bottomMargin = dp(8);
+            row.setLayoutParams(rowParams);
+
+            TextView label = new TextView(this);
+            label.setText(name);
+            label.setTextSize(15);
+            label.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
+            row.addView(label);
+
+            TextView chevron = new TextView(this);
+            chevron.setText("›");
+            chevron.setTextSize(22);
+            chevron.setAlpha(0.4f);
+            row.addView(chevron);
+
+            row.setOnClickListener(v -> {
+                dialog.dismiss();
+                pendingOffsetsMod = loader.getMod(index);
+                Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+                intent.setType("*/*");
+                intent.putExtra(Intent.EXTRA_MIME_TYPES, new String[]{"application/json", "text/plain"});
+                startActivityForResult(intent, REQUEST_IMPORT_OFFSETS);
+            });
+
+            modList.addView(row);
+        }
+
+        dialog.findViewById(R.id.dialog_mod_cancel)
+            .setOnClickListener(v -> dialog.dismiss());
+
+        dialog.show();
+    }
+
+    private void handleOffsetFileResult(Uri uri) {
+        if (pendingOffsetsMod == null || uri == null) return;
+
+        String modLibName = pendingOffsetsMod.name;
+        if (modLibName.endsWith(".so")) {
+            modLibName = modLibName.substring(0, modLibName.length() - 3);
+        }
+        String offsetFileName = modLibName + "_offsets.json";
+        File configDir = new File(getFilesDir(), "config");
+        if (!configDir.exists()) configDir.mkdirs();
+        File destFile = new File(configDir, offsetFileName);
+
+        String displayName = ModListAdapter.getVisibleModName(pendingOffsetsMod);
+
+        if (destFile.exists()) {
+            DialogY dialogY = DialogY.createFromActivity(this);
+            dialogY.title.setText(R.string.overwrite_offsets_title);
+            dialogY.content.setText(getString(R.string.overwrite_offsets_message, displayName));
+            dialogY.positiveButton.setText(android.R.string.ok);
+            dialogY.positiveButton.setOnClickListener(v -> {
+                dialogY.dialog.dismiss();
+                saveOffsetFile(uri, destFile, displayName);
+            });
+            dialogY.negativeButton.setText(R.string.cancel);
+            dialogY.negativeButton.setOnClickListener(v -> dialogY.dialog.dismiss());
+            dialogY.dialog.setCancelable(true);
+            dialogY.dialog.show();
+        } else {
+            saveOffsetFile(uri, destFile, displayName);
+        }
+    }
+
+    private int dp(int value) {
+        return Math.round(value * getResources().getDisplayMetrics().density);
+    }
+
+    private void saveOffsetFile(Uri uri, File destFile, String displayName) {
+        try (InputStream in = getContentResolver().openInputStream(uri);
+             java.io.FileOutputStream out = new java.io.FileOutputStream(destFile)) {
+            byte[] buf = new byte[8192];
+            int read;
+            while ((read = in.read(buf)) != -1) {
+                out.write(buf, 0, read);
+            }
+            Toast.makeText(this, getString(R.string.toast_offsets_imported, displayName), Toast.LENGTH_SHORT).show();
+        } catch (Exception e) {
+            Log.e("ModManager", "Failed to import offsets", e);
+            Toast.makeText(this, getString(R.string.toast_offsets_import_failed, e.getMessage()), Toast.LENGTH_LONG).show();
+        }
+        pendingOffsetsMod = null;
     }
 
     public void runUpdater() {
@@ -440,57 +608,61 @@ public class ModManagerActivity extends Activity implements LoadingListener, Mod
     }
 
     private void clearAppDataSelective() {
-        new AlertDialog.Builder(this)
-            .setTitle("Clear App Data")
-            .setMessage("This will delete all Canvas data except:\n\n" +
-                "✓ AccountAuthInfo.bin\n" +
-                "✓ mods folder\n" +
-                "✓ Accounts folder\n" +
-                "✓ config/configs folders\n\n" +
-                "⚠️ The app will restart after clearing.")
-            .setPositiveButton("Clear", (dialog, which) -> {
-                new Thread(() -> {
-                    try {
-                        File filesDir = getFilesDir();
-                        File externalDataDir = new File("/sdcard/Android/data/" + getPackageName());
+        DialogY dialogY = DialogY.createFromActivity(this);
+        dialogY.title.setText("Clear App Data");
+        dialogY.content.setText("This will delete all Canvas data except:\n\n" +
+            "✓ AccountAuthInfo.bin\n" +
+            "✓ mods folder\n" +
+            "✓ Accounts folder\n" +
+            "✓ config/configs folders\n\n" +
+            "⚠️ The app will restart after clearing.");
+        dialogY.positiveButton.setText("Clear");
+        dialogY.positiveButton.setOnClickListener(v -> {
+            dialogY.dialog.dismiss();
+            new Thread(() -> {
+                try {
+                    File filesDir = getFilesDir();
+                    File externalDataDir = new File("/sdcard/Android/data/" + getPackageName());
 
-                        clearDirectorySelective(filesDir,
-                            new String[]{"mods", "Accounts", "config"},
-                            new String[]{"AccountAuthInfo.bin"});
+                    clearDirectorySelective(filesDir,
+                        new String[]{"mods", "Accounts", "config"},
+                        new String[]{"AccountAuthInfo.bin"});
 
-                        File cacheDir = getCacheDir();
-                        if (cacheDir != null && cacheDir.exists()) deleteRecursive(cacheDir);
+                    File cacheDir = getCacheDir();
+                    if (cacheDir != null && cacheDir.exists()) deleteRecursive(cacheDir);
 
-                        File codeCacheDir = getCodeCacheDir();
-                        if (codeCacheDir != null && codeCacheDir.exists()) deleteRecursive(codeCacheDir);
+                    File codeCacheDir = getCodeCacheDir();
+                    if (codeCacheDir != null && codeCacheDir.exists()) deleteRecursive(codeCacheDir);
 
-                        if (externalDataDir.exists()) {
-                            clearDirectorySelective(externalDataDir,
-                                new String[]{"mods", "Accounts", "config", "configs"},
-                                new String[]{});
-                        }
-
-                        runOnUiThread(() -> {
-                            Toast.makeText(this, R.string.toast_data_cleared_restarting, Toast.LENGTH_SHORT).show();
-                            new android.os.Handler().postDelayed(() -> {
-                                Intent intent = getPackageManager().getLaunchIntentForPackage(getPackageName());
-                                if (intent != null) {
-                                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-                                    startActivity(intent);
-                                }
-                                System.exit(0);
-                            }, 500);
-                        });
-                    } catch (Exception e) {
-                        Log.e("ClearData", "Error clearing data", e);
-                        runOnUiThread(() ->
-                            Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_LONG).show()
-                        );
+                    if (externalDataDir.exists()) {
+                        clearDirectorySelective(externalDataDir,
+                            new String[]{"mods", "Accounts", "config", "configs"},
+                            new String[]{});
                     }
-                }).start();
-            })
-            .setNegativeButton("Cancel", null)
-            .show();
+
+                    runOnUiThread(() -> {
+                        Toast.makeText(this, R.string.toast_data_cleared_restarting, Toast.LENGTH_SHORT).show();
+                        new android.os.Handler().postDelayed(() -> {
+                            Intent intent = getPackageManager().getLaunchIntentForPackage(getPackageName());
+                            if (intent != null) {
+                                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                                startActivity(intent);
+                            }
+                            System.exit(0);
+                        }, 500);
+                    });
+                } catch (Exception e) {
+                    Log.e("ClearData", "Error clearing data", e);
+                    runOnUiThread(() ->
+                        Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_LONG).show()
+                    );
+                }
+            }).start();
+        });
+        dialogY.negativeButton.setText("Cancel");
+        dialogY.negativeButton.setOnClickListener(v -> dialogY.dialog.dismiss());
+        dialogY.dialog.setCancelable(true);
+        dialogY.dialog.show();
     }
 
     private void clearDirectorySelective(File dir, String[] preserveFolders, String[] preserveFiles) {
