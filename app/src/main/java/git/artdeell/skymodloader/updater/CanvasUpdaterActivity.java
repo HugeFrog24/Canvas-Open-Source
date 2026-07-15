@@ -51,12 +51,17 @@ public class CanvasUpdaterActivity extends Activity implements ServiceConnection
 
     @Override
     protected void onDestroy() {
-        try {
-            service.setUpdateListener(new IUpdaterConnection.Default());
-        } catch (RemoteException e) {
-            e.printStackTrace();
+        if (service != null) {
+            try {
+                service.setUpdateListener(new IUpdaterConnection.Default());
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
         }
-        unbindService(this);
+        try {
+            unbindService(this);
+        } catch (IllegalArgumentException e) {
+        }
         super.onDestroy();
     }
 

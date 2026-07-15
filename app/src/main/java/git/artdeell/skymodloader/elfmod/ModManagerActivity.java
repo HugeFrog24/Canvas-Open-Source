@@ -52,6 +52,7 @@ public class ModManagerActivity extends Activity implements LoadingListener, Mod
     private static final int REQUEST_MOD = 1024 * 121;
     private static final int REQUEST_IMPORT_OFFSETS = 1024 * 122;
     private ElfModUIMetadata pendingOffsetsMod;
+    private CanvasUpdaterConnection canvasUpdaterConnection;
     @SuppressLint("StaticFieldLeak")
     private static ElfUIBackbone loader;
     private RecyclerView modListView;
@@ -278,7 +279,16 @@ public class ModManagerActivity extends Activity implements LoadingListener, Mod
     protected void onDestroy() {
         super.onDestroy();
         if (loader != null) loader.removeListener();
-        unbindService(mDialogManager);
+        try {
+            unbindService(mDialogManager);
+        } catch (IllegalArgumentException e) {
+        }
+        if (canvasUpdaterConnection != null) {
+            try {
+                unbindService(canvasUpdaterConnection);
+            } catch (IllegalArgumentException e) {
+            }
+        }
     }
 
     @SuppressLint("NotifyDataSetChanged")
@@ -571,9 +581,10 @@ public class ModManagerActivity extends Activity implements LoadingListener, Mod
     }
 
     public void runUpdater() {
+        canvasUpdaterConnection = new CanvasUpdaterConnection(this);
         bindService(
             new Intent(this, CanvasUpdaterService.class),
-            new CanvasUpdaterConnection(this),
+            canvasUpdaterConnection,
             BIND_AUTO_CREATE
         );
     }

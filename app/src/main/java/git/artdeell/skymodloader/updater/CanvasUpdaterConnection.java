@@ -24,7 +24,11 @@ public class CanvasUpdaterConnection extends IUpdaterConnection.Stub implements 
             updater.setUpdateListener(this);
         }catch (RemoteException e) {
             Log.i("CanvasUpdaterConnection", "Failed to connect self to updater service", e);
-            context.unbindService(this);
+            try {
+                context.unbindService(this);
+            } catch (IllegalArgumentException ex) {
+
+            }
         }
     }
 
@@ -36,16 +40,22 @@ public class CanvasUpdaterConnection extends IUpdaterConnection.Stub implements 
     @Override
     public void onStateChanged() throws RemoteException {
         switch (updater.getServiceState()) {
-            // Added unbinds, because without them my phone keeps
-            // restarting the service automatically after SERVICE_STATE_PROCEED
+			
             case AbstractUpdaterService.SERVICE_STATE_UPDATE_AVAILABLE:
-                context.unbindService(this);
+                try {
+                    context.unbindService(this);
+                } catch (IllegalArgumentException e) {
+                }
                 Intent intent = new Intent(context, CanvasUpdaterActivity.class);
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
                 context.startActivity(intent);
                 break;
             case AbstractUpdaterService.SERVICE_STATE_PROCEED:
-                context.unbindService(this);
+            case AbstractUpdaterService.SERVICE_STATE_FAILURE:
+                try {
+                    context.unbindService(this);
+                } catch (IllegalArgumentException e) {
+                }
                 shutDownService();
                 break;
         }
