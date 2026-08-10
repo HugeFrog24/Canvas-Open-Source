@@ -50,6 +50,7 @@ public class AboutDialogHelper {
         addPerson(activity, timeline, "HungWah2",       null, "HungWah2",       "https://github.com/HungWah2");
         addPerson(activity, timeline, "alvindimas05",   null, "alvindimas05",   "https://github.com/alvindimas05");
         addPerson(activity, timeline, "HinnliDev",      null, "HinnliDev",      "https://github.com/HinnliDev");
+		addPerson(activity, timeline, "Catyro",         null, "Catyro",      "https://github.com/Catyro");
         endChapter(timeline);
 
         addChapter(activity, timeline, activity.getString(R.string.about_chapter_art), activity.getString(R.string.about_chapter_art_sub), true);
