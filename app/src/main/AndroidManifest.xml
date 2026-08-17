@@ -19,6 +19,7 @@
 
     <application
         android:name=".SMLApplication"
+        android:process="com.tgc.sky.android.sml"
         android:allowBackup="true"
         android:allowNativeHeapPointerTagging="false"
         android:dataExtractionRules="@xml/data_extraction_rules"

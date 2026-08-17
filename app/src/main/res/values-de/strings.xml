@@ -145,4 +145,12 @@
     <string name="online_count">%s online</string>
     <string name="loading_server">Wird geladen…</string>
     <string name="error_loading_server">Serverinfo konnte nicht geladen werden</string>
+    <string name="export_data">Daten exportieren (Backup)</string>
+    <string name="export_data_desc">Alle Mods, Konfigurationen und Konten in einer .zip-Datei speichern</string>
+    <string name="import_data">Daten importieren (Wiederherstellen)</string>
+    <string name="import_data_desc">Mods, Konfigurationen und Konten aus einer .zip-Datei wiederherstellen</string>
+    <string name="toast_export_success">Backup erfolgreich exportiert!</string>
+    <string name="toast_export_failed">Exportieren des Backups fehlgeschlagen</string>
+    <string name="toast_import_success">Backup erfolgreich wiederhergestellt! Neustart…</string>
+    <string name="toast_import_failed">Wiederherstellung des Backups fehlgeschlagen</string>
 </resources>

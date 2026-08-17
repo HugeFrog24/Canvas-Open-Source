@@ -161,4 +161,12 @@
     <string name="online_count">%s online</string>
     <string name="loading_server">Caricamento…</string>
     <string name="error_loading_server">Impossibile caricare le info del server</string>
+    <string name="export_data">Esporta dati (Backup)</string>
+    <string name="export_data_desc">Salva tutte le mod, configurazioni e account in un file .zip</string>
+    <string name="import_data">Importa dati (Ripristina)</string>
+    <string name="import_data_desc">Ripristina mod, configurazioni e account da un file .zip</string>
+    <string name="toast_export_success">Backup esportato con successo!</string>
+    <string name="toast_export_failed">Impossibile esportare il backup</string>
+    <string name="toast_import_success">Backup ripristinato con successo! Riavvio in corso…</string>
+    <string name="toast_import_failed">Impossibile ripristinare il backup</string>
 </resources>

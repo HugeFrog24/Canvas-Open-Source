@@ -161,4 +161,12 @@
     <string name="online_count">%s متصل</string>
     <string name="loading_server">جارٍ التحميل…</string>
     <string name="error_loading_server">تعذر تحميل معلومات السيرفر</string>
+    <string name="export_data">تصدير البيانات (نسخة احتياطية)</string>
+    <string name="export_data_desc">حفظ جميع التعديلات والإعدادات والحسابات في ملف .zip</string>
+    <string name="import_data">استيراد البيانات (استعادة)</string>
+    <string name="import_data_desc">استعادة التعديلات والإعدادات والحسابات من ملف .zip</string>
+    <string name="toast_export_success">تم تصدير النسخة الاحتياطية بنجاح!</string>
+    <string name="toast_export_failed">فشل تصدير النسخة الاحتياطية</string>
+    <string name="toast_import_success">تمت استعادة النسخة الاحتياطية بنجاح! جارٍ إعادة التشغيل…</string>
+    <string name="toast_import_failed">فشلت استعادة النسخة الاحتياطية</string>
 </resources>

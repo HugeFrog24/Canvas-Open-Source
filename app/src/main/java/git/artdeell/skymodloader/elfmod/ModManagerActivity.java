@@ -641,8 +641,8 @@ public class ModManagerActivity extends Activity implements LoadingListener, Mod
                     File externalDataDir = new File("/sdcard/Android/data/" + getPackageName());
 
                     clearDirectorySelective(filesDir,
-                        new String[]{"mods", "Accounts", "config"},
-                        new String[]{"AccountAuthInfo.bin"});
+                        new String[]{"mods", "Accounts", "PrivateAccounts", "OfficialAccount", "config"},
+                        new String[]{"AccountAuthInfo.bin", "device_private.key", "device_public.key"});
 
                     File cacheDir = getCacheDir();
                     if (cacheDir != null && cacheDir.exists()) deleteRecursive(cacheDir);
@@ -652,7 +652,7 @@ public class ModManagerActivity extends Activity implements LoadingListener, Mod
 
                     if (externalDataDir.exists()) {
                         clearDirectorySelective(externalDataDir,
-                            new String[]{"mods", "Accounts", "config", "configs"},
+                            new String[]{"mods", "Accounts", "PrivateAccounts", "OfficialAccount", "config", "configs"},
                             new String[]{});
                     }
 

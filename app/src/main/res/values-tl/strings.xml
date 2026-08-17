@@ -161,4 +161,12 @@
     <string name="online_count">%s online</string>
     <string name="loading_server">Loading…</string>
     <string name="error_loading_server">Could not load server info</string>
+    <string name="export_data">I-export ang Datos (Backup)</string>
+    <string name="export_data_desc">I-save ang lahat ng mod, config, at account sa isang .zip file</string>
+    <string name="import_data">I-import ang Datos (I-restore)</string>
+    <string name="import_data_desc">I-restore ang mga mod, config, at account mula sa .zip file</string>
+    <string name="toast_export_success">Matagumpay na na-export ang backup!</string>
+    <string name="toast_export_failed">Nabigong i-export ang backup</string>
+    <string name="toast_import_success">Matagumpay na na-restore ang backup! Nagre-restart…</string>
+    <string name="toast_import_failed">Nabigong i-restore ang backup</string>
 </resources>

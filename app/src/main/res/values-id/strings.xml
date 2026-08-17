@@ -164,4 +164,12 @@
     <string name="online_count">%s aktif</string>
     <string name="loading_server">Memuat…</string>
     <string name="error_loading_server">Gagal memuat informasi server</string>
+    <string name="export_data">Ekspor Data (Cadangan)</string>
+    <string name="export_data_desc">Simpan semua mod, konfigurasi, dan akun ke file .zip</string>
+    <string name="import_data">Impor Data (Pulihkan)</string>
+    <string name="import_data_desc">Pulihkan mod, konfigurasi, dan akun dari file .zip</string>
+    <string name="toast_export_success">Cadangan berhasil diekspor!</string>
+    <string name="toast_export_failed">Gagal mengekspor cadangan</string>
+    <string name="toast_import_success">Cadangan berhasil dipulihkan! Memulai ulang…</string>
+    <string name="toast_import_failed">Gagal memulihkan cadangan</string>
 </resources>

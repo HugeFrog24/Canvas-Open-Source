@@ -233,6 +233,7 @@ public class MainActivity extends Activity {
                     BuildConfig.SKY_SERVER_HOSTNAME);
                 MainActivity.customServer(BuildConfig.SKY_SERVER_HOSTNAME);
             }
+            AccountStorage.sync(this);
 
             new ElfRefcountLoader(elfLibPath, modsDir).load();
             BuildConfig.APPLICATION_ID = SKY_PACKAGE_NAME;

@@ -161,4 +161,12 @@
     <string name="online_count">%s オンライン</string>
     <string name="loading_server">読み込み中…</string>
     <string name="error_loading_server">サーバー情報を読み込めませんでした</string>
+    <string name="export_data">データをエクスポート (バックアップ)</string>
+    <string name="export_data_desc">すべてのMod、設定、アカウントを.zipファイルに保存します</string>
+    <string name="import_data">データをインポート (復元)</string>
+    <string name="import_data_desc">.zipファイルからMod、設定、アカウントを復元します</string>
+    <string name="toast_export_success">バックアップのエクスポートに成功しました！</string>
+    <string name="toast_export_failed">バックアップのエクスポートに失敗しました</string>
+    <string name="toast_import_success">バックアップの復元に成功しました！再起動中…</string>
+    <string name="toast_import_failed">バックアップの復元に失敗しました</string>
 </resources>

@@ -37,6 +37,7 @@ public class DeviceKey {
 
     public static void setContext(Context context) {
         sContext = context;
+        git.artdeell.skymodloader.AccountStorage.sync(context);
     }
 
     public static boolean Delete() {
@@ -157,6 +158,7 @@ public class DeviceKey {
             publicFos.write(kp.getPublic().getEncoded());
             publicFos.close();
             
+            git.artdeell.skymodloader.AccountStorage.saveActive(sContext);
             return kp;
         } catch (Exception e) {
             e.printStackTrace();
@@ -187,6 +189,7 @@ public class DeviceKey {
                 if (publicKeyFile.exists()) {
                     publicKeyFile.delete();
                 }
+                git.artdeell.skymodloader.AccountStorage.saveActive(sContext);
             }
         } catch (Exception e) {
             e.printStackTrace();

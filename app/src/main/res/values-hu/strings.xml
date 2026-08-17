@@ -161,5 +161,12 @@
     <string name="online_count">%s online</string>
     <string name="loading_server">Betöltés…</string>
     <string name="error_loading_server">Nem sikerült betölteni a szerver információkat</string>
-
+    <string name="export_data">Adatok exportálása (Biztonsági mentés)</string>
+    <string name="export_data_desc">Minden mod, beállítás és fiók mentése egy .zip fájlba</string>
+    <string name="import_data">Adatok importálása (Visszaállítás)</string>
+    <string name="import_data_desc">Modok, beállítások és fiókok visszaállítása .zip fájlból</string>
+    <string name="toast_export_success">Biztonsági mentés sikeresen exportálva!</string>
+    <string name="toast_export_failed">Nem sikerült exportálni a biztonsági mentést</string>
+    <string name="toast_import_success">Biztonsági mentés sikeresen visszaállítva! Újraindítás…</string>
+    <string name="toast_import_failed">Nem sikerült visszaállítani a biztonsági mentést</string>
 </resources>

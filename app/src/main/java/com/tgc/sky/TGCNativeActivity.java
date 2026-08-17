@@ -63,6 +63,7 @@ public abstract class TGCNativeActivity extends Activity implements SurfaceHolde
 
     @Override
     public void onDestroy() {
+        git.artdeell.skymodloader.AccountStorage.saveActive(this);
         this.m_destroyed = true;
         SurfaceHolder surfaceHolder = this.m_currentSurfaceHolder;
         if (surfaceHolder != null) {
@@ -73,19 +74,20 @@ public abstract class TGCNativeActivity extends Activity implements SurfaceHolde
         super.onDestroy();
     }
 
-    @Override // android.app.Activity
+    @Override
     public void onPause() {
+        git.artdeell.skymodloader.AccountStorage.saveActive(this);
         super.onPause();
         onPauseNative(this.m_handle);
     }
 
-    @Override // android.app.Activity
+    @Override
     public void onResume() {
         super.onResume();
         onResumeNative(this.m_handle);
     }
 
-    @Override // android.app.Activity
+    @Override
     protected void onSaveInstanceState(Bundle bundle) {
         super.onSaveInstanceState(bundle);
         byte[] onSaveInstanceStateNative = onSaveInstanceStateNative(this.m_handle);
@@ -94,14 +96,15 @@ public abstract class TGCNativeActivity extends Activity implements SurfaceHolde
         }
     }
 
-    @Override // android.app.Activity
+    @Override
     protected void onStart() {
         super.onStart();
         onStartNative(this.m_handle);
     }
 
-    @Override // android.app.Activity
+    @Override
     protected void onStop() {
+        git.artdeell.skymodloader.AccountStorage.saveActive(this);
         super.onStop();
         onStopNative(this.m_handle);
     }

@@ -137,4 +137,12 @@
   <string name="online_count">%s en línea</string>
   <string name="loading_server">Cargando…</string>
   <string name="error_loading_server">No se pudo cargar la info del servidor</string>
+  <string name="export_data">Exportar datos (Copia de seguridad)</string>
+  <string name="export_data_desc">Guardar todos los mods, configuraciones y cuentas en un archivo .zip</string>
+  <string name="import_data">Importar datos (Restaurar)</string>
+  <string name="import_data_desc">Restaurar mods, configuraciones y cuentas desde un archivo .zip</string>
+  <string name="toast_export_success">¡Copia de seguridad exportada con éxito!</string>
+  <string name="toast_export_failed">Error al exportar la copia de seguridad</string>
+  <string name="toast_import_success">¡Copia de seguridad restaurada con éxito! Reiniciando…</string>
+  <string name="toast_import_failed">Error al restaurar la copia de seguridad</string>
 </resources>

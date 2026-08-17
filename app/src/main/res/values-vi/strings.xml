@@ -161,4 +161,12 @@
     <string name="online_count">%s trực tuyến</string>
     <string name="loading_server">Đang tải…</string>
     <string name="error_loading_server">Không thể tải thông tin máy chủ</string>
+    <string name="export_data">Xuất dữ liệu (Sao lưu)</string>
+    <string name="export_data_desc">Lưu tất cả mod, cài đặt và tài khoản vào tệp .zip</string>
+    <string name="import_data">Nhập dữ liệu (Khôi phục)</string>
+    <string name="import_data_desc">Khôi phục mod, cài đặt và tài khoản từ tệp .zip</string>
+    <string name="toast_export_success">Đã xuất bản sao lưu thành công!</string>
+    <string name="toast_export_failed">Không thể xuất bản sao lưu</string>
+    <string name="toast_import_success">Đã khôi phục bản sao lưu thành công! Đang khởi động lại…</string>
+    <string name="toast_import_failed">Không thể khôi phục bản sao lưu</string>
 </resources>

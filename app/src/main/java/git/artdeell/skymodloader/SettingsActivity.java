@@ -27,6 +27,8 @@ import git.artdeell.skymodloader.net.StarwatchBlocker;
 public class SettingsActivity extends AppCompatActivity {
     private static final String TAG = "ClearAppData";
     private static final int REQUEST_PICK_BOOTLOADER = 9001;
+    private static final int REQUEST_EXPORT_BACKUP = 9002;
+    private static final int REQUEST_IMPORT_BACKUP = 9003;
     private Switch hideCanvasMenuSwitch;
     private Switch ceserverSwitch;
     private Switch customServerSwitch;
@@ -65,10 +67,11 @@ public class SettingsActivity extends AppCompatActivity {
 
         customServerSwitch.setChecked(getSharedPreferences("package_configs", MODE_PRIVATE)
             .getBoolean("custom_server", false));
-        customServerSwitch.setOnCheckedChangeListener((buttonView, isChecked) ->
+        customServerSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
             getSharedPreferences("package_configs", MODE_PRIVATE)
-                .edit().putBoolean("custom_server", isChecked).apply()
-        );
+                .edit().putBoolean("custom_server", isChecked).apply();
+            AccountStorage.sync(this);
+        });
 
         starwatchSwitch.setChecked(getSharedPreferences(StarwatchBlocker.PREFS_NAME, MODE_PRIVATE)
             .getBoolean(StarwatchBlocker.PREF_BLOCK_STARWATCH, false));
@@ -87,6 +90,9 @@ public class SettingsActivity extends AppCompatActivity {
             public void afterTextChanged(Editable s) {
                 getSharedPreferences("package_configs", MODE_PRIVATE)
                     .edit().putString("server_host", s.toString()).apply();
+                if (customServerSwitch.isChecked()) {
+                    AccountStorage.sync(SettingsActivity.this);
+                }
             }
         });
 
@@ -109,6 +115,8 @@ public class SettingsActivity extends AppCompatActivity {
             }
         });
 
+        findViewById(R.id.btn_export_data).setOnClickListener(v -> startExportBackup());
+        findViewById(R.id.btn_import_data).setOnClickListener(v -> startImportBackup());
         findViewById(R.id.btn_clear_app_data).setOnClickListener(v -> showClearDataDialog());
         findViewById(R.id.btn_custom_bootloader).setOnClickListener(v -> showBootloaderDialog());
     }
@@ -220,12 +228,72 @@ public class SettingsActivity extends AppCompatActivity {
         }).start();
     }
 
+    private void startExportBackup() {
+        Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType("application/zip");
+        String fileName = "canvas_backup_" + new java.text.SimpleDateFormat("yyyyMMdd_HHmmss", java.util.Locale.US).format(new java.util.Date()) + ".zip";
+        intent.putExtra(Intent.EXTRA_TITLE, fileName);
+        startActivityForResult(intent, REQUEST_EXPORT_BACKUP);
+    }
+
+    private void startImportBackup() {
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType("application/zip");
+        startActivityForResult(intent, REQUEST_IMPORT_BACKUP);
+    }
+
+    private void executeExportBackup(Uri uri) {
+        new Thread(() -> {
+            boolean success = DataBackupManager.exportBackup(this, uri);
+            runOnUiThread(() -> {
+                if (success) {
+                    Toast.makeText(this, R.string.toast_export_success, Toast.LENGTH_LONG).show();
+                } else {
+                    Toast.makeText(this, R.string.toast_export_failed, Toast.LENGTH_LONG).show();
+                }
+            });
+        }).start();
+    }
+
+    private void executeImportBackup(Uri uri) {
+        new Thread(() -> {
+            boolean success = DataBackupManager.importBackup(this, uri);
+            runOnUiThread(() -> {
+                if (success) {
+                    Toast.makeText(this, R.string.toast_import_success, Toast.LENGTH_LONG).show();
+                    restartApp();
+                } else {
+                    Toast.makeText(this, R.string.toast_import_failed, Toast.LENGTH_LONG).show();
+                }
+            });
+        }).start();
+    }
+
+    private void restartApp() {
+        new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+            Intent intent = getPackageManager().getLaunchIntentForPackage(getPackageName());
+            if (intent != null) {
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intent);
+            }
+            System.exit(0);
+        }, 1500);
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQUEST_PICK_BOOTLOADER && resultCode == Activity.RESULT_OK && data != null) {
             Uri uri = data.getData();
             if (uri != null) copyBootloaderFromUri(uri);
+        } else if (requestCode == REQUEST_EXPORT_BACKUP && resultCode == Activity.RESULT_OK && data != null) {
+            Uri uri = data.getData();
+            if (uri != null) executeExportBackup(uri);
+        } else if (requestCode == REQUEST_IMPORT_BACKUP && resultCode == Activity.RESULT_OK && data != null) {
+            Uri uri = data.getData();
+            if (uri != null) executeImportBackup(uri);
         }
     }
 
@@ -339,8 +407,8 @@ public class SettingsActivity extends AppCompatActivity {
         int dirCount = 0;
         if (!filesDir.exists() || !filesDir.isDirectory()) return new int[]{0, 0};
 
-        String[] preservedDirs = {"mods", "Accounts", "config"};
-        String[] preservedFiles = {"AccountAuthInfo.bin"};
+        String[] preservedDirs = {"mods", "Accounts", "PrivateAccounts", "OfficialAccount", "config"};
+        String[] preservedFiles = {"AccountAuthInfo.bin", "device_private.key", "device_public.key"};
         File[] contents = filesDir.listFiles();
         if (contents == null) return new int[]{0, 0};
 

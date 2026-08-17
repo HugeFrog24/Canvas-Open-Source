@@ -148,4 +148,12 @@
     <string name="online_count">%s онлайн</string>
     <string name="loading_server">Загрузка…</string>
     <string name="error_loading_server">Не удалось загрузить информацию о сервере</string>
+    <string name="export_data">Экспорт данных (Резервная копия)</string>
+    <string name="export_data_desc">Сохранить все моды, настройки и аккаунты в .zip архив</string>
+    <string name="import_data">Импорт данных (Восстановление)</string>
+    <string name="import_data_desc">Восстановить моды, настройки и аккаунты из .zip архива</string>
+    <string name="toast_export_success">Резервная копия успешно экспортирована!</string>
+    <string name="toast_export_failed">Не удалось экспортировать резервную копию</string>
+    <string name="toast_import_success">Резервная копия успешно восстановлена! Перезапуск…</string>
+    <string name="toast_import_failed">Не удалось восстановить резервную копию</string>
 </resources>
