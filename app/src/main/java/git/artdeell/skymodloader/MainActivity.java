@@ -219,6 +219,16 @@ public class MainActivity extends Activity {
             IconLoader.findIcons();
             BuildConfig.VERSION_CODE = sharedPreferences.getBoolean("skip_updates", false) ? 0x99999 : info.versionCode;
             Integer gameType = skyPackages.getOrDefault(SKY_PACKAGE_NAME, 0);
+            if (sharedPreferences.getBoolean("custom_server", false)) {
+                String customHost = sharedPreferences.getString("server_host", BuildConfig.SKY_SERVER_HOSTNAME);
+                if (customHost != null) {
+                    customHost = customHost.trim().replaceFirst("^https?://", "").replaceAll("/.*$", "");
+                    if (!customHost.isEmpty()) {
+                        BuildConfig.SKY_SERVER_HOSTNAME = customHost;
+                    }
+                }
+                MainActivity.customServer(BuildConfig.SKY_SERVER_HOSTNAME);
+            }
             MainActivity.settle(
                 info.versionCode,
                 gameType == null ? 0 : gameType,
@@ -228,11 +238,6 @@ public class MainActivity extends Activity {
                 ceserverEnabled,
                 hideCanvasMenu
             );
-            if (sharedPreferences.getBoolean("custom_server", false)) {
-                BuildConfig.SKY_SERVER_HOSTNAME = sharedPreferences.getString("server_host",
-                    BuildConfig.SKY_SERVER_HOSTNAME);
-                MainActivity.customServer(BuildConfig.SKY_SERVER_HOSTNAME);
-            }
             AccountStorage.sync(this);
 
             new ElfRefcountLoader(elfLibPath, modsDir).load();

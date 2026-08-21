@@ -100,8 +100,16 @@ public class Starboard extends BasePanel implements View.OnLayoutChangeListener,
         roundCornerWebView.getSettings().setJavaScriptEnabled(true);
         roundCornerWebView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
         StringBuilder sb = new StringBuilder(BuildConfig.SKY_SERVER_HOSTNAME);
-        sb.delete(sb.indexOf("radiance"), sb.indexOf("radiance") + 8);
-        sb.insert(sb.indexOf(".") + 1, "starboard");
+        int radIndex = sb.indexOf("radiance");
+        if (radIndex != -1) {
+            sb.delete(radIndex, radIndex + 8);
+        }
+        int dotIndex = sb.indexOf(".");
+        if (dotIndex != -1) {
+            sb.insert(dotIndex + 1, "starboard");
+        } else {
+            sb.append(".starboard");
+        }
         sb.insert(0, "https://");
         final String sb2 = sb.toString();
         roundCornerWebView.setWebViewClient(new WebViewClient() {
