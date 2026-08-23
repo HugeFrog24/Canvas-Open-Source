@@ -113,7 +113,7 @@
     <string name="custom_server">Custom server</string>
     <string name="block_starwatch">Block Starwatch</string>
     <string name="server_url">Server URL</string>
-    <string name="server_url_hint" translatable="false">insert-url</string>
+    <string name="server_url_hint" translatable="false">sky.thatskyradiance.duckdns.org</string>
     <string name="enable_logcat_monitoring">Enable Logcat Monitoring</string>
     <string name="section_advanced">Advanced</string>
     <string name="custom_bootloader_setting">Custom libBootloader.so</string>
@@ -191,4 +191,17 @@
     <string name="toast_export_failed">Failed to export backup</string>
     <string name="toast_import_success">Backup restored successfully! Restarting…</string>
     <string name="toast_import_failed">Failed to restore backup</string>
+
+    <!-- server switch -->
+    <string name="approved_servers">APPROVED SERVERS</string>
+    <string name="radiance_official_private_server">Radiance Official Private Server</string>
+    <string name="server_radiance_connected" translatable="false">Connected · sky.thatskyradiance.duckdns.org</string>
+    <string name="server_disconnected_live">Not Connected · Using Live (TGC Official)</string>
+    <string name="server_disconnected_custom">Not Connected · Using Custom (%s)</string>
+    <string name="server_connected_radiance">Connected to Radiance Official Private Server</string>
+    <string name="server_connected_live">Connected to Live Official Server</string>
+    <string name="server_connected_to">Connected to %s</string>
+    <string name="server_live">Live (TGC Official)</string>
+    <string name="dialog_server_title">Select Server</string>
+    <string name="dialog_server_subtitle">Choose an approved server or connect to official Live</string>
 </resources>

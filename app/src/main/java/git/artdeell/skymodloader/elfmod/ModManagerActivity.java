@@ -16,8 +16,10 @@ import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -34,6 +36,7 @@ import java.util.ArrayList;
 import java.util.Objects;
 
 import git.artdeell.skymodloader.AboutDialogHelper;
+import git.artdeell.skymodloader.AccountStorage;
 import git.artdeell.skymodloader.BuildConfig;
 import git.artdeell.skymodloader.CommunityTabBuilder;
 import git.artdeell.skymodloader.DialogY;
@@ -42,6 +45,8 @@ import git.artdeell.skymodloader.MainActivity;
 import git.artdeell.skymodloader.R;
 import git.artdeell.skymodloader.SettingsActivity;
 import git.artdeell.skymodloader.SMLApplication;
+import git.artdeell.skymodloader.server.ApprovedServer;
+import git.artdeell.skymodloader.server.ServerManager;
 import git.artdeell.skymodloader.updater.CanvasUpdaterConnection;
 import git.artdeell.skymodloader.updater.CanvasUpdaterService;
 import git.artdeell.skymodloader.updater.ModUpdater;
@@ -66,6 +71,14 @@ public class ModManagerActivity extends Activity implements LoadingListener, Mod
     private ArrayList<String> skyPackages;
     private ModUpdaterDialogManager mDialogManager;
 
+    // Server switch
+    private View serverCard;
+    private ImageView serverIcon;
+    private Switch serverSwitch;
+    private TextView serverTitle;
+    private TextView serverSubtitle;
+    private View serverStatusDot;
+
     // Tab navigation
     private ConstraintLayout modsTabContent;
     private ScrollView communityTabContent;
@@ -86,10 +99,17 @@ public class ModManagerActivity extends Activity implements LoadingListener, Mod
         btnLaunchLive = findViewById(R.id.mm_launch_live);
         btnLaunchHuawei = findViewById(R.id.mm_launch_huawei);
         btnLaunchChplay = findViewById(R.id.mm_launch_chplay);
+        serverCard = findViewById(R.id.mm_server_card);
+        serverIcon = findViewById(R.id.mm_server_icon);
+        serverSwitch = findViewById(R.id.mm_server_switch);
+        serverTitle = findViewById(R.id.mm_server_title);
+        serverSubtitle = findViewById(R.id.mm_server_subtitle);
+        serverStatusDot = findViewById(R.id.mm_server_status_dot);
         ((TextView) findViewById(R.id.mm_versionName)).setText(getString(R.string.mod_canvas_version, BuildConfig.VERSION_NAME));
         initializeSkyPackages();
         sharedPreferences = getSharedPreferences("package_configs", Context.MODE_PRIVATE);
         updateButtonTextColor();
+        setupServerSwitch();
         initializeModUpdater();
         initializeLoader();
         modListView.setLayoutManager(new LinearLayoutManager(this));
@@ -223,6 +243,108 @@ public class ModManagerActivity extends Activity implements LoadingListener, Mod
 
     public void setServerUrl(String url) {
         sharedPreferences.edit().putString("server_host", url).apply();
+    }
+
+    private boolean isUpdatingUI = false;
+
+    private void setupServerSwitch() {
+        if (serverSwitch == null) return;
+        updateServerUIState();
+
+        serverSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (isUpdatingUI) return;
+            buttonView.performHapticFeedback(android.view.HapticFeedbackConstants.KEYBOARD_TAP);
+            if (isChecked) {
+                if (!ServerManager.APPROVED_SERVERS.isEmpty()) {
+                    ApprovedServer defaultServer = ServerManager.APPROVED_SERVERS.get(0);
+                    ServerManager.activateServer(this, defaultServer);
+                    Toast.makeText(this, R.string.server_connected_radiance, Toast.LENGTH_SHORT).show();
+                }
+            } else {
+                ServerManager.activateLiveServer(this);
+                Toast.makeText(this, R.string.server_connected_live, Toast.LENGTH_SHORT).show();
+            }
+            updateServerUIState();
+        });
+
+        if (serverCard != null) {
+            serverCard.setOnClickListener(v -> {
+                if (ServerManager.APPROVED_SERVERS.size() > 1) {
+                    ServerManager.showServerSelectionDialog(this, this::updateServerUIState);
+                } else if (serverSwitch != null) {
+                    serverSwitch.toggle();
+                }
+            });
+            serverCard.setOnLongClickListener(v -> {
+                ServerManager.showServerSelectionDialog(this, this::updateServerUIState);
+                return true;
+            });
+        }
+    }
+
+    private void updateServerUIState() {
+        if (serverSwitch == null || serverTitle == null || serverSubtitle == null) return;
+        isUpdatingUI = true;
+        try {
+            ApprovedServer activeApproved = ServerManager.getActiveApprovedServer(this);
+            boolean isCustomThirdParty = ServerManager.isCustomThirdPartyActive(this);
+            ApprovedServer displayServer = (activeApproved != null) ? activeApproved : (!ServerManager.APPROVED_SERVERS.isEmpty() ? ServerManager.APPROVED_SERVERS.get(0) : null);
+
+            serverSwitch.setChecked(activeApproved != null);
+
+            if (activeApproved != null) {
+                serverTitle.setText(activeApproved.name);
+                serverTitle.setTextColor(getColor(activeApproved.accentColorRes));
+                serverSubtitle.setText(R.string.server_radiance_connected);
+                if (serverIcon != null) {
+                    serverIcon.setImageResource(activeApproved.iconRes);
+                    serverIcon.setAlpha(1.0f);
+                }
+                if (serverStatusDot != null) {
+                    serverStatusDot.setBackgroundResource(activeApproved.statusDotRes);
+                }
+            } else if (isCustomThirdParty) {
+                String host = ServerManager.getCurrentHost(this);
+                serverTitle.setText(displayServer != null ? displayServer.name : getString(R.string.approved_servers));
+                serverTitle.setTextColor(getColor(R.color.text));
+                serverSubtitle.setText(getString(R.string.server_disconnected_custom, host));
+                if (serverIcon != null) {
+                    if (displayServer != null) {
+                        serverIcon.setImageResource(displayServer.iconRes);
+                    } else {
+                        serverIcon.setImageResource(R.drawable.ic_server);
+                    }
+                    serverIcon.setAlpha(0.6f);
+                }
+                if (serverStatusDot != null) {
+                    serverStatusDot.setBackgroundResource(R.drawable.status_dot_offline);
+                }
+            } else {
+                serverTitle.setText(displayServer != null ? displayServer.name : getString(R.string.approved_servers));
+                serverTitle.setTextColor(getColor(R.color.text));
+                serverSubtitle.setText(R.string.server_disconnected_live);
+                if (serverIcon != null) {
+                    if (displayServer != null) {
+                        serverIcon.setImageResource(displayServer.iconRes);
+                    } else {
+                        serverIcon.setImageResource(R.drawable.ic_server);
+                    }
+                    serverIcon.setAlpha(0.6f);
+                }
+                if (serverStatusDot != null) {
+                    serverStatusDot.setBackgroundResource(R.drawable.status_dot_offline);
+                }
+            }
+        } finally {
+            isUpdatingUI = false;
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        updateButtonTextColor();
+        updateServerUIState();
     }
 
     public void setLogcatEnabled(boolean flag) {

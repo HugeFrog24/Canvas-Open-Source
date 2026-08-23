@@ -35,6 +35,7 @@ import dalvik.system.DexClassLoader;
 import git.artdeell.skymodloader.elfmod.ElfRefcountLoader;
 import git.artdeell.skymodloader.iconloader.IconLoader;
 import git.artdeell.skymodloader.net.StarwatchBlocker;
+import git.artdeell.skymodloader.server.ServerManager;
 
 public class MainActivity extends Activity {
     private SharedPreferences sharedPreferences;
@@ -220,9 +221,9 @@ public class MainActivity extends Activity {
             BuildConfig.VERSION_CODE = sharedPreferences.getBoolean("skip_updates", false) ? 0x99999 : info.versionCode;
             Integer gameType = skyPackages.getOrDefault(SKY_PACKAGE_NAME, 0);
             if (sharedPreferences.getBoolean("custom_server", false)) {
-                String customHost = sharedPreferences.getString("server_host", BuildConfig.SKY_SERVER_HOSTNAME);
+                String customHost = sharedPreferences.getString("server_host", ServerManager.getDefaultHost());
                 if (customHost != null) {
-                    customHost = customHost.trim().replaceFirst("^https?://", "").replaceAll("/.*$", "");
+                    customHost = ServerManager.sanitizeHost(customHost);
                     if (!customHost.isEmpty()) {
                         BuildConfig.SKY_SERVER_HOSTNAME = customHost;
                     }

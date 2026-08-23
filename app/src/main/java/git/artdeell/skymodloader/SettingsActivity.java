@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import git.artdeell.skymodloader.net.StarwatchBlocker;
+import git.artdeell.skymodloader.server.ServerManager;
 
 public class SettingsActivity extends AppCompatActivity {
     private static final String TAG = "ClearAppData";
@@ -70,6 +71,12 @@ public class SettingsActivity extends AppCompatActivity {
         customServerSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
             getSharedPreferences("package_configs", MODE_PRIVATE)
                 .edit().putBoolean("custom_server", isChecked).apply();
+            if (isChecked && getSharedPreferences("package_configs", MODE_PRIVATE).getString("server_host", "").trim().isEmpty()) {
+                String defaultHost = ServerManager.getDefaultHost();
+                getSharedPreferences("package_configs", MODE_PRIVATE)
+                    .edit().putString("server_host", defaultHost).apply();
+                serverUrlInput.setText(defaultHost);
+            }
             AccountStorage.sync(this);
         });
 

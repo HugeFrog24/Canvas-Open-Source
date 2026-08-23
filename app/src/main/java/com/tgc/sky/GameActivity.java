@@ -255,6 +255,9 @@ public class GameActivity extends TGCNativeActivity implements View.OnCapturedPo
         onCreateNative();
         initGameController();
         logoView = findViewById(R.id.imageView);
+        if (logoView != null) {
+            logoView.setImageResource(git.artdeell.skymodloader.server.ServerManager.getActiveBootLogoRes(this));
+        }
         Intent intent = getIntent();
         if (intent != null) HandleNewIntent(intent);
         getWindow().getDecorView().setOnApplyWindowInsetsListener((view, windowInsets) -> {

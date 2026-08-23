@@ -8,6 +8,8 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
+import git.artdeell.skymodloader.server.ServerManager;
+
 public class AccountStorage {
     private static final String PREFS_NAME = "account_storage_configs";
     private static final String PREF_LAST_SERVER = "last_synced_server";
@@ -50,7 +52,7 @@ public class AccountStorage {
         SharedPreferences prefs = context.getSharedPreferences("package_configs", Context.MODE_PRIVATE);
         boolean isCustomServer = prefs.getBoolean("custom_server", false);
         if (isCustomServer) {
-            String host = prefs.getString("server_host", "custom_server");
+            String host = prefs.getString("server_host", ServerManager.getDefaultHost());
             return "private_" + sanitizeKey(host);
         }
         return "official";
