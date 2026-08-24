@@ -37,6 +37,7 @@ import java.util.HashMap;
 import java.util.Locale;
 
 import git.artdeell.skymodloader.net.StarwatchBlocker;
+import git.artdeell.skymodloader.server.ServerManager;
 
 public class SystemCommerce_android
 {
@@ -261,6 +262,15 @@ public class SystemCommerce_android
     }
 
     private HashMap<String, ProductInfo> fetchCatalogProducts(String[] systemProductIds) throws Exception {
+        HashMap<String, ProductInfo> catalogProducts = new HashMap<>();
+
+        if (ServerManager.isCustomServerEnabled(mActivity)) {
+            for (String systemProductId : systemProductIds) {
+                catalogProducts.put(systemProductId, createDisplayOnlyProductInfo(systemProductId));
+            }
+            return catalogProducts;
+        }
+
         HashMap<String, String> requestedProducts = new HashMap<>();
         for (String systemProductId : systemProductIds) {
             requestedProducts.put(toXsollaSku(systemProductId), systemProductId);
@@ -269,7 +279,6 @@ public class SystemCommerce_android
         String response = getUrl(buildCatalogUrl());
         JSONObject root = new JSONObject(response);
         JSONArray items = root.optJSONArray("items");
-        HashMap<String, ProductInfo> catalogProducts = new HashMap<>();
         if (items == null) {
             return catalogProducts;
         }
