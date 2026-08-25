@@ -44,18 +44,8 @@ public class SystemCommerce_android
     private static final String TAG = "SystemCommerce_android";
     private static final String DEFAULT_PACKAGE_NAME = "com.tgc.sky.android";
     private static final String SKY_STORE_URL = "https://store.thatskygame.com/";
-    private static final String XSOLLA_CATALOG_URL = "https://store.xsolla.com/api/v2/project/207830/items/virtual_items/group";
+    private static final String XSOLLA_CATALOG_URL = "https://store.xsolla.com/api/v2/project/207830/items/virtual_items";
     private static final String XSOLLA_SKU_PREFIX = "xsolla.sky.";
-    private static final String[] XSOLLA_CATALOG_GROUPS = {
-            "event2",
-            "events",
-            "seasons",
-            "candles",
-            "currency",
-            "starterpack",
-            "secondscreen",
-            "psseasonpass"
-    };
 
     private static volatile SystemCommerce_android sInstance;
     private final GameActivity mActivity;
@@ -118,6 +108,10 @@ public class SystemCommerce_android
     }
 
     public boolean MakePurchase(String productIdToSystemProductId, String accountId, String profileId) {
+        if (ServerManager.isCustomServerEnabled(mActivity)) {
+            return false;
+        }
+
         String systemProductId = toSystemProductId(productIdToSystemProductId);
         if (!mProductInfo.containsKey(systemProductId)) {
             return false;
@@ -155,6 +149,10 @@ public class SystemCommerce_android
 
     @SuppressLint("SetJavaScriptEnabled")
     private void openStore(final String url) {
+        if (ServerManager.isCustomServerEnabled(mActivity)) {
+            return;
+        }
+
         mActivity.runOnUiThread(() -> {
             final Dialog dialog = new Dialog(mActivity);
             final FrameLayout webViewContainer = new FrameLayout(mActivity);
@@ -256,7 +254,14 @@ public class SystemCommerce_android
                 });
             } catch (Exception e) {
                 Log.w(TAG, "Failed to load Sky Store catalog", e);
-                mMainHandler.post(() -> mActivity.onCommerceUpdate(true, false, false));
+                mMainHandler.post(() -> {
+                    for (String systemProductId : systemProductIds) {
+                        if (!mProductInfo.containsKey(systemProductId)) {
+                            mProductInfo.put(systemProductId, createDisplayOnlyProductInfo(systemProductId));
+                        }
+                    }
+                    mActivity.onCommerceUpdate(true, false, false);
+                });
             }
         }, "SkyStoreCatalog").start();
     }
@@ -279,35 +284,34 @@ public class SystemCommerce_android
         String response = getUrl(buildCatalogUrl());
         JSONObject root = new JSONObject(response);
         JSONArray items = root.optJSONArray("items");
-        if (items == null) {
-            return catalogProducts;
+        if (items != null) {
+            for (int i = 0; i < items.length(); ++i) {
+                JSONObject item = items.optJSONObject(i);
+                if (item == null) {
+                    continue;
+                }
+
+                String sku = item.optString("sku", "").toLowerCase(Locale.ROOT);
+                String systemProductId = requestedProducts.get(sku);
+                if (systemProductId == null) {
+                    continue;
+                }
+
+                catalogProducts.put(systemProductId, createCatalogProductInfo(systemProductId, item));
+            }
         }
 
-        for (int i = 0; i < items.length(); ++i) {
-            JSONObject item = items.optJSONObject(i);
-            if (item == null) {
-                continue;
+        for (String systemProductId : systemProductIds) {
+            if (!catalogProducts.containsKey(systemProductId)) {
+                catalogProducts.put(systemProductId, createDisplayOnlyProductInfo(systemProductId));
             }
-
-            String sku = item.optString("sku", "").toLowerCase(Locale.ROOT);
-            String systemProductId = requestedProducts.get(sku);
-            if (systemProductId == null) {
-                continue;
-            }
-
-            catalogProducts.put(systemProductId, createCatalogProductInfo(systemProductId, item));
         }
 
         return catalogProducts;
     }
 
     private String buildCatalogUrl() {
-        StringBuilder url = new StringBuilder(XSOLLA_CATALOG_URL);
-        url.append("?locale=").append(urlEncode(getCatalogLocale()));
-        for (String group : XSOLLA_CATALOG_GROUPS) {
-            url.append("&external_id%5B%5D=").append(urlEncode(group));
-        }
-        return url.toString();
+        return XSOLLA_CATALOG_URL + "?locale=" + urlEncode(getCatalogLocale()) + "&limit=100";
     }
 
     private String getUrl(String url) throws IOException {
