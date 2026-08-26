@@ -162,7 +162,7 @@ public class GameActivity extends TGCNativeActivity implements View.OnCapturedPo
 
     private native void onCreateNative();
     public native void onSafeAreaInsetsChanged(float[] fArr);
-    private static native boolean onTouchNative(int i, int i2, float f, float f2, double d);
+    private static native boolean onTouchNative(int i, int i2, float f, float f2);
     public native String ResolveTemplateArgsNative(String str);
     public native void onMouseMovedNative(int x, int y);
     public native void onMouseDeltaNative(int dx, int dy);
@@ -186,6 +186,9 @@ public class GameActivity extends TGCNativeActivity implements View.OnCapturedPo
     public native void onAccelerometerNative(float gravityX, float gravityY, float gravityZ, float accelX, float accelY, float accelZ);
     public native void onOrientationNative(int orientation, float quatX, float quatY, float quatZ, float quatW, float rotX, float rotY, float rotZ);
     public native void onMotionAvailabilityNative(boolean available);
+    public native void setPendingDeeplinkNative(String str);
+    public native void onTextFieldTextChanged(String str);
+    public native void onTextFieldCursorPosChanged(int start, int end);
 
     public int getAppBuildVersion() { return com.tgc.sky.BuildConfig.VERSION_CODE; }
     public String getAppVersion() { return com.tgc.sky.BuildConfig.SKY_VERSION; }
@@ -680,13 +683,13 @@ public class GameActivity extends TGCNativeActivity implements View.OnCapturedPo
         if (actionMasked == MotionEvent.ACTION_MOVE || actionMasked == MotionEvent.ACTION_CANCEL) {
             for (int i = 0; i < motionEvent.getPointerCount(); i++) {
                 onTouchNative(motionEvent.getPointerId(i) + 1, actionMasked,
-                    motionEvent.getX(i), motionEvent.getY(i), (double) motionEvent.getEventTime());
+                    motionEvent.getX(i), motionEvent.getY(i));
             }
             return true;
         }
         int actionIndex = motionEvent.getActionIndex();
         return onTouchNative(motionEvent.getPointerId(actionIndex) + 1, actionMasked,
-            motionEvent.getX(actionIndex), motionEvent.getY(actionIndex), (double) motionEvent.getEventTime());
+            motionEvent.getX(actionIndex), motionEvent.getY(actionIndex));
     }
 
     private PointF transformPointToProgram(float x, float y) {
@@ -1143,9 +1146,39 @@ public class GameActivity extends TGCNativeActivity implements View.OnCapturedPo
     public float getDisplayDensity() { return SMLApplication.skyRes.getDisplayMetrics().density; }
     public boolean isScreenHdr() { return SMLApplication.skyRes.getConfiguration().isScreenHdr(); }
     public boolean isScreenWideColorGamut() { return SMLApplication.skyRes.getConfiguration().isScreenWideColorGamut(); }
-    public float getDesiredMinLum() { return getWindowManager().getDefaultDisplay().getHdrCapabilities().getDesiredMinLuminance(); }
-    public float getDesiredMaxLum() { return getWindowManager().getDefaultDisplay().getHdrCapabilities().getDesiredMaxLuminance(); }
-    public float getDisplayRefreshRate() { return getWindowManager().getDefaultDisplay().getRefreshRate(); }
+    public float getDesiredMinLum() {
+        Display display = getWindowManager().getDefaultDisplay();
+        if (display != null && display.getHdrCapabilities() != null) {
+            return display.getHdrCapabilities().getDesiredMinLuminance();
+        }
+        return 0.0f;
+    }
+    public float getDesiredMaxLum() {
+        Display display = getWindowManager().getDefaultDisplay();
+        if (display != null && display.getHdrCapabilities() != null) {
+            return display.getHdrCapabilities().getDesiredMaxLuminance();
+        }
+        return 0.0f;
+    }
+    public float getDisplayRefreshRate() {
+        Display display = getWindowManager().getDefaultDisplay();
+        return display != null ? display.getRefreshRate() : 60.0f;
+    }
+    public float getDisplayMaxRefreshRate() {
+        Display defaultDisplay = getWindowManager().getDefaultDisplay();
+        if (defaultDisplay == null) return 60.0f;
+        Display.Mode mode = defaultDisplay.getMode();
+        float refreshRate = mode != null ? mode.getRefreshRate() : defaultDisplay.getRefreshRate();
+        Display.Mode[] supportedModes = defaultDisplay.getSupportedModes();
+        if (supportedModes != null && mode != null) {
+            for (Display.Mode mode2 : supportedModes) {
+                if (mode2 != null && mode2.getPhysicalWidth() == mode.getPhysicalWidth() && mode2.getPhysicalHeight() == mode.getPhysicalHeight()) {
+                    refreshRate = Math.max(refreshRate, mode2.getRefreshRate());
+                }
+            }
+        }
+        return refreshRate;
+    }
 
     public int getPhysicalMemorySize() {
         ActivityManager.MemoryInfo memoryInfo = new ActivityManager.MemoryInfo();

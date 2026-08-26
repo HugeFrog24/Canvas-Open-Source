@@ -1540,4 +1540,19 @@ public class SystemUI_android {
     String GetShortDateString(long j) {
         return DateFormat.getDateInstance(3, Locale.getDefault()).format(new Date(j * 1000));
     }
+
+    public boolean SupportsARDepthAPI() { return false; }
+    public int GetARCameraPermissionState() { return 0; }
+    public void RequestPermissionAndStartARCamera() {}
+    public void StopARCamera() {}
+    public void RegisterARImageMarker(String str, float f, byte[] bArr) {}
+    public float[] GetARCameraProjectionMatrix() { return new float[16]; }
+    public float[] GetARCameraViewMatrix() { return new float[16]; }
+    public void CreateARAnchor(String str) {}
+    public boolean DestroyARAnchor(String str) { return false; }
+    public void ARCameraUpdate() {}
+    public int ShowAgeVerification(String str, String str2) { return -1; }
+    public void CloseAgeVerification(int i) {}
+    public void onResume() {}
+    public void onDestroy() {}
 }

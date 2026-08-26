@@ -187,6 +187,7 @@ public class SystemIO_android {
         this.mNFCSessionManager = new NFCSessionManager(gameActivity);
         this.m_videoRecorder = new NtVideoRecorder(this.m_activity);
         this.mUserPrefs = m_activity.getSharedPreferences("user", Context.MODE_PRIVATE);
+        m_updateReachabilityFlags(this.m_activity, null);
     }
 
     /* access modifiers changed from: package-private */
@@ -197,6 +198,7 @@ public class SystemIO_android {
         intentFilter.addAction("android.net.wifi.STATE_CHANGE");
         intentFilter.addAction("android.net.conn.CONNECTIVITY_CHANGE");
         this.m_activity.registerReceiver(this.m_receiver, intentFilter);
+        m_updateReachabilityFlags(this.m_activity, null);
         m_onAudioDeviceChanged((AudioManager) this.m_activity.getSystemService(Context.AUDIO_SERVICE), (Intent) null);
         ExoplayerService exoplayerService = this.mExoplayer;
         if (exoplayerService != null) {
@@ -236,7 +238,46 @@ public class SystemIO_android {
 
     /* access modifiers changed from: package-private */
     public void m_updateReachabilityFlags(Context context, Intent intent) {
+        if (context == null) return;
         ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        boolean wifi = false;
+        boolean cellular = false;
+        if (connectivityManager != null) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                android.net.Network network = connectivityManager.getActiveNetwork();
+                if (network != null) {
+                    android.net.NetworkCapabilities caps = connectivityManager.getNetworkCapabilities(network);
+                    if (caps != null && (caps.hasCapability(android.net.NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                            || caps.hasCapability(android.net.NetworkCapabilities.NET_CAPABILITY_VALIDATED))) {
+                        if (caps.hasTransport(android.net.NetworkCapabilities.TRANSPORT_WIFI)
+                                || caps.hasTransport(android.net.NetworkCapabilities.TRANSPORT_ETHERNET)) {
+                            wifi = true;
+                        } else if (caps.hasTransport(android.net.NetworkCapabilities.TRANSPORT_CELLULAR)) {
+                            cellular = true;
+                        } else {
+                            wifi = true;
+                        }
+                    }
+                }
+            } else {
+                android.net.NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
+                if (networkInfo != null && networkInfo.isConnected()) {
+                    int type = networkInfo.getType();
+                    if (type == ConnectivityManager.TYPE_WIFI || type == ConnectivityManager.TYPE_ETHERNET) {
+                        wifi = true;
+                    } else if (type == ConnectivityManager.TYPE_MOBILE) {
+                        cellular = true;
+                    } else {
+                        wifi = true;
+                    }
+                }
+            }
+        }
+        this.m_networkReachableByWifi = wifi;
+        this.m_networkReachableByCellular = cellular;
+        if (this.m_activity != null) {
+            this.m_activity.onInternetReachabilityNative(wifi, cellular);
+        }
     }
 
     public void RequestResourceBundle(String str) {
