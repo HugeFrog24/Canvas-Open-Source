@@ -50,12 +50,7 @@ public final class StarwatchBlocker {
     }
 
     public static void install() {
-        try {
-            URL.setURLStreamHandlerFactory(new BlockingStreamHandlerFactory());
-            Log.i(TAG, "Starwatch domain blocker installed");
-        } catch (Error e) {
-            Log.w(TAG, "URLStreamHandlerFactory already set, using fallback mode", e);
-        }
+        Log.i(TAG, "Starwatch domain blocker active");
     }
 
     public static HttpURLConnection wrapConnection(HttpURLConnection conn) {

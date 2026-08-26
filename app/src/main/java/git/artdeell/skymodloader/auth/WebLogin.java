@@ -4,20 +4,25 @@ import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.content.Intent;
 import android.net.Uri;
+import android.net.http.SslError;
+import android.os.Build;
+import android.os.Message;
+import android.util.Log;
+import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
-import android.os.Build;
 import android.webkit.CookieManager;
+import android.webkit.SslErrorHandler;
+import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
-import git.artdeell.skymodloader.net.StarwatchBlocker;
-
 import com.tgc.sky.BuildConfig;
 import com.tgc.sky.GameActivity;
+import com.tgc.sky.SystemIO_android;
 import com.tgc.sky.accounts.SystemAccountClientInfo;
 import com.tgc.sky.accounts.SystemAccountClientRequestState;
 import com.tgc.sky.accounts.SystemAccountClientState;
@@ -26,19 +31,24 @@ import com.tgc.sky.accounts.SystemAccountServerInfo;
 import com.tgc.sky.accounts.SystemAccountServerState;
 import com.tgc.sky.accounts.SystemAccountType;
 
+import git.artdeell.skymodloader.net.StarwatchBlocker;
+
 import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 
 public class WebLogin extends WebViewClient implements SystemAccountInterface {
+    private static final String TAG = "WebLogin";
+    private static final String USER_AGENT = "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Mobile Safari/537.36";
     private final SystemAccountType accountType;
-    private final String loginUrl;
-    private final String redirectUrl;
+    private final String webLoginType;
     private Dialog dialog;
     private WebView webView;
     private SystemAccountClientInfo m_accountClientInfo;
@@ -48,20 +58,39 @@ public class WebLogin extends WebViewClient implements SystemAccountInterface {
     private boolean m_signedInSuccessfully = false;
 
     public WebLogin(String webLoginType, String token, SystemAccountType systemAccountType) {
+        this.webLoginType = webLoginType;
         this.accountType = systemAccountType;
-        if (token == null) token = "";
+    }
+
+    public WebLogin(String webLoginType, SystemAccountType systemAccountType) {
+        this(webLoginType, null, systemAccountType);
+    }
+
+    private String getLoginUrl() {
         String host = BuildConfig.SKY_SERVER_HOSTNAME;
         if (host != null) {
             host = host.trim().replaceFirst("^https?://", "").replaceAll("/.*$", "");
         } else {
             host = "live.radiance.thatgamecompany.com";
         }
-        this.loginUrl = String.format("https://%s/account/auth/oauth_signin?type=%s&token=%s", host, webLoginType, token);
-        this.redirectUrl = String.format("https://%s/account/auth/oauth_redirect", host);
+        String token = "";
+        try {
+            SystemIO_android sysIO = SystemIO_android.getInstance();
+            if (sysIO != null && sysIO.GetPushNotificationToken() != null) {
+                token = URLEncoder.encode(sysIO.GetPushNotificationToken(), StandardCharsets.UTF_8.name());
+            }
+        } catch (UnsupportedEncodingException ignored) {}
+        return String.format("https://%s/account/auth/oauth_signin?type=%s&token=%s", host, webLoginType, token);
     }
 
-    public WebLogin(String webLoginType, SystemAccountType systemAccountType) {
-        this(webLoginType, null, systemAccountType);
+    private String getRedirectUrl() {
+        String host = BuildConfig.SKY_SERVER_HOSTNAME;
+        if (host != null) {
+            host = host.trim().replaceFirst("^https?://", "").replaceAll("/.*$", "");
+        } else {
+            host = "live.radiance.thatgamecompany.com";
+        }
+        return String.format("https://%s/account/auth/oauth_redirect", host);
     }
 
     @Override
@@ -118,12 +147,16 @@ public class WebLogin extends WebViewClient implements SystemAccountInterface {
 
     @SuppressLint("SetJavaScriptEnabled")
     public void startSignIn() {
-        dialog = new Dialog(m_activity);
+        dialog = new Dialog(m_activity, android.R.style.Theme_Black_NoTitleBar_Fullscreen);
+        dialog.setCancelable(true);
+        dialog.setCanceledOnTouchOutside(false);
         dialog.setOnDismissListener(dialog1 -> {
+            restoreGameImmersiveFocus();
             if (!m_signedInSuccessfully) {
                 submitSignOutState();
             }
         });
+
         webView = new WebView(m_activity) {
             @Override
             public boolean onCheckIsTextEditor() {
@@ -132,18 +165,48 @@ public class WebLogin extends WebViewClient implements SystemAccountInterface {
         };
         dialog.setContentView(webView);
         webView.setWebViewClient(this);
+        webView.setWebChromeClient(new WebChromeClient() {
+            @Override
+            public boolean onCreateWindow(WebView view, boolean isDialog, boolean isUserGesture, Message resultMsg) {
+                WebView newWebView = new WebView(m_activity);
+                newWebView.setWebViewClient(new WebViewClient() {
+                    @Override
+                    public boolean shouldOverrideUrlLoading(WebView v, String url) {
+                        return checkAndHandleRedirect(url);
+                    }
+                    @Override
+                    public boolean shouldOverrideUrlLoading(WebView v, WebResourceRequest req) {
+                        return checkAndHandleRedirect(req.getUrl().toString());
+                    }
+                });
+                WebView.WebViewTransport transport = (WebView.WebViewTransport) resultMsg.obj;
+                transport.setWebView(newWebView);
+                resultMsg.sendToTarget();
+                return true;
+            }
+        });
+
         WebSettings settings = webView.getSettings();
         settings.setJavaScriptEnabled(true);
         settings.setDomStorageEnabled(true);
         settings.setDatabaseEnabled(true);
         settings.setUseWideViewPort(true);
+        settings.setLoadWithOverviewMode(true);
+        settings.setSupportZoom(true);
+        settings.setBuiltInZoomControls(true);
+        settings.setDisplayZoomControls(false);
+        settings.setJavaScriptCanOpenWindowsAutomatically(true);
+        settings.setSupportMultipleWindows(true);
+        settings.setUserAgentString(USER_AGENT);
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
             CookieManager.getInstance().setAcceptThirdPartyCookies(webView, true);
         }
-        if (this.accountType == SystemAccountType.kSystemAccountType_Google) {
-            settings.setUserAgentString("Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Mobile Safari/537.36");
-        }
-        webView.loadUrl(loginUrl);
+
+        String url = getLoginUrl();
+        Log.i(TAG, "Starting sign in for " + webLoginType + " URL: " + url);
+        webView.loadUrl(url);
         dialog.show();
         showWebView();
     }
@@ -158,14 +221,59 @@ public class WebLogin extends WebViewClient implements SystemAccountInterface {
         return checkAndHandleRedirect(url);
     }
 
+    @Override
+    public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
+        Log.w(TAG, "SSL Error during auth flow: " + error);
+        handler.proceed();
+    }
+
+    @Override
+    public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
+        Log.e(TAG, "WebView error " + errorCode + ": " + description + " for " + failingUrl);
+    }
+
     private boolean checkAndHandleRedirect(String url) {
-        if (url != null && (url.startsWith(redirectUrl) || url.contains("/account/auth/oauth_redirect"))) {
-            if (dialog != null) {
-                dialog.hide();
-            }
+        if (url == null || url.isEmpty()) return false;
+        Log.i(TAG, "checkAndHandleRedirect URL: " + url);
+
+        String redirectUrl = getRedirectUrl();
+        String urlWithoutQuery = url.split("\\?")[0];
+
+        // Check if the current URL itself (not query params) is the oauth_redirect endpoint
+        if (urlWithoutQuery.equalsIgnoreCase(redirectUrl) || url.startsWith(redirectUrl + "?") || url.equals(redirectUrl)) {
+            Log.i(TAG, "Real OAuth redirect reached: " + url);
+            m_activity.runOnUiThread(() -> {
+                if (dialog != null && dialog.isShowing()) {
+                    dialog.dismiss();
+                }
+            });
             new Thread(() -> processLoading(url)).start();
             return true;
         }
+
+        // Handle custom URL schemes (intent://, hwid://, market://, hms://, etc.)
+        if (!url.startsWith("http://") && !url.startsWith("https://") && !url.startsWith("about:") && !url.startsWith("javascript:")) {
+            Log.i(TAG, "Handling custom URI scheme: " + url);
+            try {
+                Intent intent;
+                if (url.startsWith("intent://")) {
+                    intent = Intent.parseUri(url, Intent.URI_INTENT_SCHEME);
+                } else {
+                    intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                }
+                if (intent != null) {
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    if (m_activity != null && intent.resolveActivity(m_activity.getPackageManager()) != null) {
+                        m_activity.startActivity(intent);
+                        return true;
+                    }
+                }
+            } catch (Exception e) {
+                Log.w(TAG, "Failed to resolve intent for: " + url, e);
+            }
+            return true;
+        }
+
         return false;
     }
 
@@ -177,17 +285,19 @@ public class WebLogin extends WebViewClient implements SystemAccountInterface {
     }
 
     private void processLoading(final String url) {
+        Log.i(TAG, "processLoading starting for: " + url);
         CookieManager.getInstance().flush();
         try {
             HttpURLConnection httpURLConnection = (HttpURLConnection) new URL(url).openConnection();
             httpURLConnection.setInstanceFollowRedirects(true);
-            httpURLConnection.setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Mobile Safari/537.36");
+            httpURLConnection.setRequestProperty("User-Agent", USER_AGENT);
             String cookies = CookieManager.getInstance().getCookie(url);
             if (cookies != null && !cookies.isEmpty()) {
                 httpURLConnection.setRequestProperty("Cookie", cookies);
             }
             InputStream inputStream;
             int responseCode = httpURLConnection.getResponseCode();
+            Log.i(TAG, "OAuth redirect HTTP response code: " + responseCode);
             if (responseCode >= 200 && responseCode < 300) {
                 inputStream = httpURLConnection.getInputStream();
             } else {
@@ -205,14 +315,24 @@ public class WebLogin extends WebViewClient implements SystemAccountInterface {
             byteArrayOutputStream.flush();
             inputStream.close();
             httpURLConnection.disconnect();
-            JSONObject obj = new JSONObject(new String(byteArrayOutputStream.toByteArray(), StandardCharsets.UTF_8));
+            
+            String responseBody = new String(byteArrayOutputStream.toByteArray(), StandardCharsets.UTF_8);
+            Log.i(TAG, "OAuth redirect response body: " + responseBody);
+            JSONObject obj = new JSONObject(responseBody);
+            String id = obj.optString("id", "");
+            if (id.isEmpty()) {
+                Log.w(TAG, "OAuth response missing id or returned error: " + responseBody);
+                submitSignOutState();
+                return;
+            }
             String token = obj.optString("token", "");
             if (token.isEmpty()) {
                 token = obj.optString("signature", "");
             }
-            submitSignInState(obj.optString("id"), obj.optString("alias"), token);
+            Log.i(TAG, "OAuth success, submitting sign in state for id: " + id);
+            submitSignInState(id, obj.optString("alias", ""), token);
         } catch (Exception e) {
-            e.printStackTrace();
+            Log.e(TAG, "processLoading error: " + e.getMessage(), e);
             submitSignOutState();
         }
     }
@@ -220,6 +340,10 @@ public class WebLogin extends WebViewClient implements SystemAccountInterface {
     private void submitSignOutState() {
         m_signedInSuccessfully = false;
         m_activity.runOnUiThread(() -> {
+            if (dialog != null && dialog.isShowing()) {
+                dialog.dismiss();
+            }
+            restoreGameImmersiveFocus();
             m_accountClientInfo.state = SystemAccountClientState.kSystemAccountClientState_SignedOut;
             m_callback.UpdateClientInfo(m_accountClientInfo);
         });
@@ -231,11 +355,33 @@ public class WebLogin extends WebViewClient implements SystemAccountInterface {
             if (dialog != null && dialog.isShowing()) {
                 dialog.dismiss();
             }
+            restoreGameImmersiveFocus();
             m_accountClientInfo.accountId = id;
             m_accountClientInfo.alias = alias;
             m_accountClientInfo.signature = signature;
             m_accountClientInfo.state = SystemAccountClientState.kSystemAccountClientState_SignedIn;
             m_callback.UpdateClientInfo(this.m_accountClientInfo);
+        });
+    }
+
+    private void restoreGameImmersiveFocus() {
+        if (m_activity == null) return;
+        m_activity.runOnUiThread(() -> {
+            try {
+                Window window = m_activity.getWindow();
+                if (window != null && window.getDecorView() != null) {
+                    View decor = window.getDecorView();
+                    decor.setSystemUiVisibility(
+                        View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                        | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                        | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_FULLSCREEN
+                    );
+                    decor.requestFocus();
+                }
+            } catch (Throwable ignored) {}
         });
     }
 

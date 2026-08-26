@@ -1,6 +1,6 @@
 package com.tgc.sky;
 
-import com.tgc.sky.accounts.Apple;
+import git.artdeell.skymodloader.auth.Apple;
 import com.tgc.sky.accounts.AppleGameCenter;
 import git.artdeell.skymodloader.auth.Facebook;
 import git.artdeell.skymodloader.auth.Google;
