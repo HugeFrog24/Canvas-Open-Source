@@ -182,6 +182,59 @@ void ImGuiEndHook() {
     return ImGuiEnd();
 }
 
+// Chat Record Constructor Hook (Sky 0.34.5) to fix blue messages bug without breaking permissions
+static void* (*orig_ChatRecordConstructor)(void*, void*, void*, void*, void*, void*, void*, void*) = nullptr;
+static void* g_chatRecordStub = nullptr;
+
+static void* hooked_ChatRecordConstructor(void* self, void* a2, void* a3, void* a4, void* a5, void* a6, void* a7, void* a8) {
+    if (self != nullptr) {
+        // Strip only the broadcast/pending bits (0xE0)
+        // Preserve lower permission/channel bits (0x1F)
+        uint8_t* pFlags = (uint8_t*)self + 20;
+        *pFlags &= ~0xe0;
+    }
+    void* ret = orig_ChatRecordConstructor ? orig_ChatRecordConstructor(self, a2, a3, a4, a5, a6, a7, a8) : self;
+    if (self != nullptr) {
+        uint8_t* pFlags = (uint8_t*)self + 20;
+        *pFlags &= ~0xe0;
+    }
+    return ret;
+}
+
+static void install_chat_fix() {
+    if (g_chatRecordStub != nullptr) return;
+    
+    uintptr_t base = Canvas::findLib(Canvas::libName ? Canvas::libName : "libBootloader.so");
+    if (base == 0) {
+        LOGD("libBootloader.so not loaded yet for chat fix");
+        return;
+    }
+    
+    uintptr_t targetAddr = 0;
+    
+    // Try known version RVA (Sky 0.34.5)
+    const uintptr_t CHAT_RECORD_CONSTRUCTOR_RVA = 0x13f23b8;
+    targetAddr = base + CHAT_RECORD_CONSTRUCTOR_RVA;
+    
+    // Safety check: Ensure target address is 4-byte aligned (ARM64 requirement)
+    if ((targetAddr & 3) != 0) {
+        LOGW("Chat fix: Target address %p is misaligned, safely skipping hook", (void*)targetAddr);
+        return;
+    }
+
+    g_chatRecordStub = shadowhook_hook_func_addr(
+        (void*)targetAddr,
+        (void*)hooked_ChatRecordConstructor,
+        (void**)&orig_ChatRecordConstructor
+    );
+    if (g_chatRecordStub != nullptr) {
+        LOGI("Chat record constructor hook installed at %p (RVA 0x%lx)", (void*)targetAddr, targetAddr - base);
+    } else {
+        int err = shadowhook_get_errno();
+        LOGW("Chat record constructor hook skipped (err %d: %s)", err, shadowhook_to_errmsg(err));
+    }
+}
+
 __unused __attribute__((constructor))
 int main() {
     LOGI("Starting Sky ModMenu.. Build time: " __DATE__ " " __TIME__);
@@ -195,6 +248,8 @@ int main() {
     ->set_Callback((std::uintptr_t)&ImGuiEnd)
     ->set_Address("_ZN5ImGui3EndEv")
     ->Fire();
+
+    install_chat_fix();
 
     return 0;
 }
@@ -230,6 +285,7 @@ Java_git_artdeell_skymodloader_MainActivity_settle(
         start_ceserver();
     }
 
+    install_chat_fix();
 }
 
 
