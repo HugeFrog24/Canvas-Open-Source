@@ -45,8 +45,6 @@ import git.artdeell.skymodloader.MainActivity;
 import git.artdeell.skymodloader.R;
 import git.artdeell.skymodloader.SettingsActivity;
 import git.artdeell.skymodloader.SMLApplication;
-import git.artdeell.skymodloader.server.ApprovedServer;
-import git.artdeell.skymodloader.server.ServerManager;
 import git.artdeell.skymodloader.updater.CanvasUpdaterConnection;
 import git.artdeell.skymodloader.updater.CanvasUpdaterService;
 import git.artdeell.skymodloader.updater.ModUpdater;
@@ -71,9 +69,6 @@ public class ModManagerActivity extends Activity implements LoadingListener, Mod
     private ArrayList<String> skyPackages;
     private ModUpdaterDialogManager mDialogManager;
 
-    // Approved servers
-    private LinearLayout serverList;
-
     // Tab navigation
     private ConstraintLayout modsTabContent;
     private ScrollView communityTabContent;
@@ -94,12 +89,10 @@ public class ModManagerActivity extends Activity implements LoadingListener, Mod
         btnLaunchLive = findViewById(R.id.mm_launch_live);
         btnLaunchHuawei = findViewById(R.id.mm_launch_huawei);
         btnLaunchChplay = findViewById(R.id.mm_launch_chplay);
-        serverList = findViewById(R.id.mm_server_list);
         ((TextView) findViewById(R.id.mm_versionName)).setText(getString(R.string.mod_canvas_version, BuildConfig.VERSION_NAME));
         initializeSkyPackages();
         sharedPreferences = getSharedPreferences("package_configs", Context.MODE_PRIVATE);
         updateButtonTextColor();
-        setupServerSwitches();
         initializeModUpdater();
         initializeLoader();
         modListView.setLayoutManager(new LinearLayoutManager(this));
@@ -235,76 +228,10 @@ public class ModManagerActivity extends Activity implements LoadingListener, Mod
         sharedPreferences.edit().putString("server_host", url).apply();
     }
 
-    private boolean isUpdatingUI = false;
-
-    private void setupServerSwitches() {
-        if (serverList == null) return;
-        serverList.removeAllViews();
-        for (ApprovedServer server : ServerManager.APPROVED_SERVERS) {
-            View row = getLayoutInflater().inflate(
-                R.layout.approved_server_item, serverList, false);
-            ImageView icon = row.findViewById(R.id.approved_server_icon);
-            TextView title = row.findViewById(R.id.approved_server_title);
-            TextView host = row.findViewById(R.id.approved_server_host);
-            Switch serverSwitch = row.findViewById(R.id.approved_server_switch);
-
-            row.setTag(server);
-            icon.setImageResource(server.iconRes);
-            title.setText(server.name);
-            host.setText(server.description != null ? server.description : server.host);
-
-            serverSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
-                if (isUpdatingUI) return;
-                buttonView.performHapticFeedback(
-                    android.view.HapticFeedbackConstants.KEYBOARD_TAP);
-                ApprovedServer activeServer =
-                    ServerManager.getActiveApprovedServer(this);
-                if (isChecked) {
-                    ServerManager.activateServer(this, server);
-                    Toast.makeText(this, getString(
-                        R.string.server_connected_to, server.name), Toast.LENGTH_SHORT).show();
-                } else if (activeServer != null && activeServer.id.equals(server.id)) {
-                    ServerManager.activateLiveServer(this);
-                    Toast.makeText(this, R.string.server_connected_live,
-                        Toast.LENGTH_SHORT).show();
-                }
-                updateServerUIState();
-            });
-            row.setOnClickListener(view -> serverSwitch.toggle());
-            serverList.addView(row);
-        }
-        updateServerUIState();
-    }
-
-    private void updateServerUIState() {
-        if (serverList == null) return;
-        isUpdatingUI = true;
-        try {
-            ApprovedServer activeApproved = ServerManager.getActiveApprovedServer(this);
-            for (int i = 0; i < serverList.getChildCount(); i++) {
-                View row = serverList.getChildAt(i);
-                ApprovedServer server = (ApprovedServer) row.getTag();
-                boolean isActive = activeApproved != null
-                    && activeApproved.id.equals(server.id);
-                ImageView icon = row.findViewById(R.id.approved_server_icon);
-                TextView title = row.findViewById(R.id.approved_server_title);
-                Switch serverSwitch = row.findViewById(R.id.approved_server_switch);
-
-                serverSwitch.setChecked(isActive);
-                title.setTextColor(getColor(
-                    isActive ? server.accentColorRes : R.color.text));
-                icon.setAlpha(isActive ? 1.0f : 0.6f);
-            }
-        } finally {
-            isUpdatingUI = false;
-        }
-    }
-
     @Override
     protected void onResume() {
         super.onResume();
         updateButtonTextColor();
-        updateServerUIState();
     }
 
     public void setLogcatEnabled(boolean flag) {

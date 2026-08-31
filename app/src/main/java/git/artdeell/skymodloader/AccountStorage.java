@@ -53,6 +53,9 @@ public class AccountStorage {
         boolean isCustomServer = prefs.getBoolean("custom_server", false);
         if (isCustomServer) {
             String host = prefs.getString("server_host", ServerManager.getDefaultHost());
+            if (host == null || host.trim().isEmpty()) {
+                return "official";
+            }
             return "private_" + sanitizeKey(host);
         }
         return "official";

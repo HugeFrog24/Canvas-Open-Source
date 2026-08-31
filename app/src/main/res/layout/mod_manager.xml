@@ -161,55 +161,13 @@
 
                     </LinearLayout>
 
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginLeft="10dp"
-                        android:layout_marginTop="4dp"
-                        android:layout_marginRight="10dp"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
 
-                        <View
-                            android:layout_width="0dp"
-                            android:layout_height="1dp"
-                            android:layout_marginLeft="16dp"
-                            android:layout_weight="1"
-                            android:background="@drawable/separator" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:paddingLeft="10dp"
-                            android:paddingRight="10dp"
-                            android:text="@string/approved_servers"
-                            android:textColor="@color/text"
-                            android:textSize="11sp"
-                            android:textStyle="bold" />
-
-                        <View
-                            android:layout_width="0dp"
-                            android:layout_height="1dp"
-                            android:layout_marginRight="16dp"
-                            android:layout_weight="1"
-                            android:background="@drawable/separator" />
-
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:id="@+id/mm_server_list"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="10dp"
-                        android:layout_marginEnd="10dp"
-                        android:layout_marginTop="4dp"
-                        android:orientation="vertical" />
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginLeft="10dp"
-                        android:layout_marginTop="4dp"
+                        android:layout_marginTop="8dp"
                         android:layout_marginRight="10dp"
                         android:gravity="center_vertical"
                         android:orientation="horizontal">
@@ -228,7 +186,7 @@
                             android:paddingRight="10dp"
                             android:text="@string/play"
                             android:textColor="@color/text"
-                            android:textSize="11sp"
+                            android:textSize="12sp"
                             android:textStyle="bold" />
 
                         <View
@@ -246,44 +204,47 @@
                         android:orientation="vertical"
                         android:layout_marginStart="10dp"
                         android:layout_marginEnd="10dp"
-                        android:layout_marginTop="4dp">
+                        android:layout_marginTop="6dp">
 
                         <Button
                             android:id="@+id/mm_launch_live"
                             android:layout_width="match_parent"
-                            android:layout_height="38dp"
-                            android:layout_marginBottom="4dp"
+                            android:layout_height="58dp"
+                            android:layout_marginBottom="6dp"
                             android:background="@drawable/buttons"
                             android:gravity="center"
-                            android:paddingTop="2dp"
-                            android:paddingBottom="2dp"
+                            android:paddingTop="6dp"
+                            android:paddingBottom="6dp"
                             android:text="@string/launch_google_play"
-                            android:textSize="11sp"
+                            android:textSize="13.5sp"
+                            android:textStyle="bold"
                             android:maxLines="2" />
 
                         <Button
                             android:id="@+id/mm_launch_chplay"
                             android:layout_width="match_parent"
-                            android:layout_height="38dp"
-                            android:layout_marginBottom="4dp"
+                            android:layout_height="58dp"
+                            android:layout_marginBottom="6dp"
                             android:background="@drawable/buttons"
                             android:gravity="center"
-                            android:paddingTop="2dp"
-                            android:paddingBottom="2dp"
+                            android:paddingTop="6dp"
+                            android:paddingBottom="6dp"
                             android:text="Cửa Hàng Play | VIETNAMESE VERSION\nchơi"
-                            android:textSize="11sp"
+                            android:textSize="13.5sp"
+                            android:textStyle="bold"
                             android:maxLines="2" />
 
                         <Button
                             android:id="@+id/mm_launch_huawei"
                             android:layout_width="match_parent"
-                            android:layout_height="38dp"
+                            android:layout_height="58dp"
                             android:background="@drawable/buttons"
                             android:gravity="center"
-                            android:paddingTop="2dp"
-                            android:paddingBottom="2dp"
+                            android:paddingTop="6dp"
+                            android:paddingBottom="6dp"
                             android:text="@string/launch_huawei"
-                            android:textSize="11sp"
+                            android:textSize="13.5sp"
+                            android:textStyle="bold"
                             android:maxLines="2" />
 
                     </LinearLayout>
@@ -292,7 +253,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginLeft="10dp"
-                        android:layout_marginTop="4dp"
+                        android:layout_marginTop="8dp"
                         android:layout_marginRight="10dp"
                         android:gravity="center_vertical"
                         android:orientation="horizontal">
@@ -311,7 +272,7 @@
                             android:paddingRight="10dp"
                             android:text="@string/mods"
                             android:textColor="@color/text"
-                            android:textSize="11sp"
+                            android:textSize="12sp"
                             android:textStyle="bold" />
 
                         <View
@@ -328,30 +289,31 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="10dp"
                         android:layout_marginEnd="10dp"
-                        android:layout_marginTop="4dp"
-                        android:layout_marginBottom="2dp"
+                        android:layout_marginTop="6dp"
+                        android:layout_marginBottom="6dp"
                         android:orientation="horizontal"
                         android:gravity="center_vertical">
 
                         <Button
                             android:id="@+id/mm_addMod"
                             android:layout_width="0dp"
-                            android:layout_height="38dp"
+                            android:layout_height="52dp"
                             android:layout_weight="1"
-                            android:layout_marginEnd="4dp"
+                            android:layout_marginEnd="8dp"
                             android:background="@drawable/buttons"
                             android:onClick="onAddMod"
                             android:text="@string/add_mod"
-                            android:textSize="11sp"
+                            android:textSize="14.5sp"
+                            android:textStyle="bold"
                             android:gravity="center" />
 
                         <Button
                             android:id="@+id/mm_modInfo"
-                            android:layout_width="38dp"
-                            android:layout_height="38dp"
+                            android:layout_width="52dp"
+                            android:layout_height="52dp"
                             android:background="@drawable/buttons"
                             android:text="?"
-                            android:textSize="16sp"
+                            android:textSize="20sp"
                             android:textStyle="bold"
                             android:gravity="center"
                             android:onClick="onModInfo" />

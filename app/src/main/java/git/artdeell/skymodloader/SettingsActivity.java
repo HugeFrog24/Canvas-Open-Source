@@ -73,9 +73,11 @@ public class SettingsActivity extends AppCompatActivity {
                 .edit().putBoolean("custom_server", isChecked).apply();
             if (isChecked && getSharedPreferences("package_configs", MODE_PRIVATE).getString("server_host", "").trim().isEmpty()) {
                 String defaultHost = ServerManager.getDefaultHost();
-                getSharedPreferences("package_configs", MODE_PRIVATE)
-                    .edit().putString("server_host", defaultHost).apply();
-                serverUrlInput.setText(defaultHost);
+                if (!defaultHost.isEmpty()) {
+                    getSharedPreferences("package_configs", MODE_PRIVATE)
+                        .edit().putString("server_host", defaultHost).apply();
+                    serverUrlInput.setText(defaultHost);
+                }
             }
             AccountStorage.sync(this);
         });
@@ -96,10 +98,7 @@ public class SettingsActivity extends AppCompatActivity {
             @Override
             public void afterTextChanged(Editable s) {
                 getSharedPreferences("package_configs", MODE_PRIVATE)
-                    .edit().putString("server_host", s.toString()).apply();
-                if (customServerSwitch.isChecked()) {
-                    AccountStorage.sync(SettingsActivity.this);
-                }
+                    .edit().putString("server_host", s.toString().trim()).apply();
             }
         });
 
@@ -456,10 +455,16 @@ public class SettingsActivity extends AppCompatActivity {
                     dirCount += counts[1];
                 }
             }
-            if (fileOrDirectory.delete()) dirCount++;
+            if (fileOrDirectory.delete()) fileCount++;
         } else {
             if (fileOrDirectory.delete()) fileCount++;
         }
         return new int[]{fileCount, dirCount};
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        AccountStorage.sync(this);
     }
 }

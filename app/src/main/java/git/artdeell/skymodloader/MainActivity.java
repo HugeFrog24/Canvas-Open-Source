@@ -226,6 +226,9 @@ public class MainActivity extends Activity {
                     customHost = ServerManager.sanitizeHost(customHost);
                     if (!customHost.isEmpty()) {
                         BuildConfig.SKY_SERVER_HOSTNAME = customHost;
+                        Log.i("MainActivity", "Custom server hostname configured: " + BuildConfig.SKY_SERVER_HOSTNAME);
+                    } else {
+                        Log.w("MainActivity", "Custom server is enabled but server_host is empty");
                     }
                 }
                 MainActivity.customServer(BuildConfig.SKY_SERVER_HOSTNAME);
