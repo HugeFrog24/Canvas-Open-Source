@@ -1,0 +1,9 @@
+# arm64 image for HWASan (the sanitizer Android supports on device), run on
+# this x86 host under Docker's QEMU emulation. Same clang 18 / libc++ 18 as
+# canvas-sanitizer-harness:local.
+#   docker build --platform linux/arm64 -t canvas-hwasan-arm64:local -f app/src/test/sanitizers/Dockerfile.hwasan app/src/test/sanitizers
+FROM --platform=linux/arm64 ubuntu:24.04
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+        clang lld llvm libclang-rt-18-dev libc++-18-dev libc++abi-18-dev ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+WORKDIR /harness

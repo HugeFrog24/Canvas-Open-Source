@@ -1,0 +1,6 @@
+# canvas-sanitizer-harness:local plus valgrind, for load-independent
+# instruction counts (callgrind).
+#   docker build -t canvas-perf-harness:local -f app/src/test/perf/Dockerfile.perf app/src/test/perf
+FROM canvas-sanitizer-harness:local
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends valgrind \
+    && rm -rf /var/lib/apt/lists/*

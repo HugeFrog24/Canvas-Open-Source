@@ -1,0 +1,1256 @@
+diff --git a/app/build.gradle b/app/build.gradle
+index ba708ae..32c638d 100644
+--- a/app/build.gradle
++++ b/app/build.gradle
+@@ -42,6 +42,10 @@ android {
+     }
+ 
+     buildTypes {
++        debug {
++            applicationIdSuffix ".mousefix"
++            versionNameSuffix "-perfdiag"
++        }
+         release {
+             minifyEnabled true
+             shrinkResources true
+diff --git a/app/src/debug/res/values-ar/strings.xml b/app/src/debug/res/values-ar/strings.xml
+new file mode 100644
+index 0000000..6b74417
+--- /dev/null
++++ b/app/src/debug/res/values-ar/strings.xml
+@@ -0,0 +1,4 @@
++<?xml version="1.0" encoding="utf-8"?>
++<resources>
++    <string name="app_name" translatable="false">Canvas (perf diag)</string>
++</resources>
+diff --git a/app/src/debug/res/values-es/strings.xml b/app/src/debug/res/values-es/strings.xml
+new file mode 100644
+index 0000000..6b74417
+--- /dev/null
++++ b/app/src/debug/res/values-es/strings.xml
+@@ -0,0 +1,4 @@
++<?xml version="1.0" encoding="utf-8"?>
++<resources>
++    <string name="app_name" translatable="false">Canvas (perf diag)</string>
++</resources>
+diff --git a/app/src/debug/res/values-hu/strings.xml b/app/src/debug/res/values-hu/strings.xml
+new file mode 100644
+index 0000000..6b74417
+--- /dev/null
++++ b/app/src/debug/res/values-hu/strings.xml
+@@ -0,0 +1,4 @@
++<?xml version="1.0" encoding="utf-8"?>
++<resources>
++    <string name="app_name" translatable="false">Canvas (perf diag)</string>
++</resources>
+diff --git a/app/src/debug/res/values-id/strings.xml b/app/src/debug/res/values-id/strings.xml
+new file mode 100644
+index 0000000..6b74417
+--- /dev/null
++++ b/app/src/debug/res/values-id/strings.xml
+@@ -0,0 +1,4 @@
++<?xml version="1.0" encoding="utf-8"?>
++<resources>
++    <string name="app_name" translatable="false">Canvas (perf diag)</string>
++</resources>
+diff --git a/app/src/debug/res/values-it/strings.xml b/app/src/debug/res/values-it/strings.xml
+new file mode 100644
+index 0000000..6b74417
+--- /dev/null
++++ b/app/src/debug/res/values-it/strings.xml
+@@ -0,0 +1,4 @@
++<?xml version="1.0" encoding="utf-8"?>
++<resources>
++    <string name="app_name" translatable="false">Canvas (perf diag)</string>
++</resources>
+diff --git a/app/src/debug/res/values-ja/strings.xml b/app/src/debug/res/values-ja/strings.xml
+new file mode 100644
+index 0000000..6b74417
+--- /dev/null
++++ b/app/src/debug/res/values-ja/strings.xml
+@@ -0,0 +1,4 @@
++<?xml version="1.0" encoding="utf-8"?>
++<resources>
++    <string name="app_name" translatable="false">Canvas (perf diag)</string>
++</resources>
+diff --git a/app/src/debug/res/values-pt/strings.xml b/app/src/debug/res/values-pt/strings.xml
+new file mode 100644
+index 0000000..6b74417
+--- /dev/null
++++ b/app/src/debug/res/values-pt/strings.xml
+@@ -0,0 +1,4 @@
++<?xml version="1.0" encoding="utf-8"?>
++<resources>
++    <string name="app_name" translatable="false">Canvas (perf diag)</string>
++</resources>
+diff --git a/app/src/debug/res/values-tl/strings.xml b/app/src/debug/res/values-tl/strings.xml
+new file mode 100644
+index 0000000..6b74417
+--- /dev/null
++++ b/app/src/debug/res/values-tl/strings.xml
+@@ -0,0 +1,4 @@
++<?xml version="1.0" encoding="utf-8"?>
++<resources>
++    <string name="app_name" translatable="false">Canvas (perf diag)</string>
++</resources>
+diff --git a/app/src/debug/res/values-vi/strings.xml b/app/src/debug/res/values-vi/strings.xml
+new file mode 100644
+index 0000000..6b74417
+--- /dev/null
++++ b/app/src/debug/res/values-vi/strings.xml
+@@ -0,0 +1,4 @@
++<?xml version="1.0" encoding="utf-8"?>
++<resources>
++    <string name="app_name" translatable="false">Canvas (perf diag)</string>
++</resources>
+diff --git a/app/src/debug/res/values/strings.xml b/app/src/debug/res/values/strings.xml
+new file mode 100644
+index 0000000..6b74417
+--- /dev/null
++++ b/app/src/debug/res/values/strings.xml
+@@ -0,0 +1,4 @@
++<?xml version="1.0" encoding="utf-8"?>
++<resources>
++    <string name="app_name" translatable="false">Canvas (perf diag)</string>
++</resources>
+diff --git a/app/src/main/AndroidManifest.xml b/app/src/main/AndroidManifest.xml
+index b1598ce..b0e4e6c 100644
+--- a/app/src/main/AndroidManifest.xml
++++ b/app/src/main/AndroidManifest.xml
+@@ -37,7 +37,7 @@
+ 
+         <provider
+             android:name="androidx.core.content.FileProvider"
+-            android:authorities="git.artdeell.skymodloader.provider"
++            android:authorities="${applicationId}.provider"
+             android:exported="false"
+             android:grantUriPermissions="true">
+             <meta-data
+@@ -111,7 +111,7 @@
+ 
+         <provider
+             android:name="git.artdeell.skymodloader.updater.Updater"
+-            android:authorities="git.artdeell.skymodloader.updater"
++            android:authorities="${applicationId}.updater"
+             android:exported="false"
+             android:grantUriPermissions="true">
+             <meta-data
+diff --git a/app/src/main/cpp/Utils/imgui_androidbk/androidbk.cpp b/app/src/main/cpp/Utils/imgui_androidbk/androidbk.cpp
+index a5b51fd..ba37e43 100644
+--- a/app/src/main/cpp/Utils/imgui_androidbk/androidbk.cpp
++++ b/app/src/main/cpp/Utils/imgui_androidbk/androidbk.cpp
+@@ -21,6 +21,8 @@
+ #include <vector>
+ #include "Canvas/Canvas.h"
+ #include "androidbk.h"
++#include "perfdiag.h"
++#include "perfdiag_vk.h"
+ #include "../../include/misc/visibility.h"
+ 
+ PRIVATE_API ImGuiStyle canvasBaseStyle;
+@@ -158,7 +160,7 @@ PRIVATE_API void initContext() {
+     if (eglInitialize(g_EglDisplay, nullptr, nullptr) != EGL_TRUE)
+         __android_log_print(ANDROID_LOG_ERROR, g_LogTag, "%s", "eglInitialize() returned with an error");
+     eglSwapInterval(g_EglDisplay, 1);
+-    const EGLint egl_attributes[] = { EGL_BLUE_SIZE, 8, EGL_GREEN_SIZE, 8, EGL_RED_SIZE, 8, EGL_ALPHA_SIZE, 8, EGL_DEPTH_SIZE, 24, EGL_SURFACE_TYPE, EGL_WINDOW_BIT, EGL_NONE };
++    const EGLint egl_attributes[] = { EGL_BLUE_SIZE, 8, EGL_GREEN_SIZE, 8, EGL_RED_SIZE, 8, EGL_ALPHA_SIZE, 8, EGL_DEPTH_SIZE, perfdiag::depthBits.load(), EGL_SURFACE_TYPE, EGL_WINDOW_BIT, EGL_NONE };
+     EGLint num_configs = 0;
+     if (eglChooseConfig(g_EglDisplay, egl_attributes, nullptr, 0, &num_configs) != EGL_TRUE)
+         __android_log_print(ANDROID_LOG_ERROR, g_LogTag, "%s", "eglChooseConfig() returned with an error");
+@@ -169,8 +171,10 @@ PRIVATE_API void initContext() {
+     eglChooseConfig(g_EglDisplay, egl_attributes, &egl_config, 1, &num_configs);
+     eglGetConfigAttrib(g_EglDisplay, egl_config, EGL_NATIVE_VISUAL_ID, &egl_format);
+ 
+-    const EGLint egl_context_attributes[] = { EGL_CONTEXT_CLIENT_VERSION, 3, EGL_NONE };
++    EGLint egl_context_attributes[] = { EGL_CONTEXT_CLIENT_VERSION, 3, EGL_NONE, EGL_NONE, EGL_NONE };
++    perfdiag::context_priority_attribs(g_EglDisplay, egl_context_attributes + 2);
+     g_EglContext = eglCreateContext(g_EglDisplay, egl_config, EGL_NO_CONTEXT, egl_context_attributes);
++    perfdiag::log_egl(g_EglDisplay, egl_config, g_EglContext);
+ 
+     if (g_EglContext == EGL_NO_CONTEXT)
+         __android_log_print(ANDROID_LOG_ERROR, g_LogTag, "%s", "eglCreateContext() returned EGL_NO_CONTEXT");
+@@ -502,21 +506,47 @@ PRIVATE_API void newframe() {
+ PRIVATE_API void renderloop()
+ {
+     ImGuiIO &io = ImGui::GetIO();
++    perfdiag::reset_skip();
++    perfdiag::reset_damage();
++    perfdiag::apply_thread_policy();
+     while (run) {
+-        if(Canvas::frameRateLimited) usleep(41000);
++        if(Canvas::frameRateLimited) {
++            if (perfdiag::limiter == 2) perfdiag::pace30(run);
++            else if (perfdiag::limiter >= 3) perfdiag::wait_game_frame(run);
++            else usleep(41000);
++        }
++        const long long cpu0 = perfdiag::now_ns(CLOCK_THREAD_CPUTIME_ID);
++        const long long wall0 = perfdiag::now_ns(CLOCK_MONOTONIC);
+         ImGui_ImplOpenGL3_NewFrame();
+         newframe();
+         CanvasInput::Drain();          // replay UI-thread input into ImGui
+         ImGui::NewFrame();
+         CanvasInput::ApplyPendingFocusClear();
+         Canvas::CanvasMenu();
++        perfdiag::draw_heavy();
+         ImGui::Render();
+         CanvasInput::PublishSnapshot(); // serves next frame's UI-thread queries
+-        glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
+-        glClearColor(0, 0, 0, 0);
+-        glClear(GL_COLOR_BUFFER_BIT);
+-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+-        eglSwapBuffers(g_EglDisplay, g_EglSurface);
++        const bool present = !perfdiag::skipUnchanged || perfdiag::frame_changed(ImGui::GetDrawData());
++        long long swapNs = 0;
++        double damageFraction = -1.0;
++        if (present) {
++            glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
++            glClearColor(0, 0, 0, 0);
++            if (perfdiag::damage)
++                damageFraction = perfdiag::clear_damaged(g_EglDisplay, g_EglSurface, ImGui::GetDrawData(),
++                                                         (int)io.DisplaySize.x, (int)io.DisplaySize.y);
++            else
++                glClear(GL_COLOR_BUFFER_BIT);
++            ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
++            perfdiag::set_present_time(g_EglDisplay, g_EglSurface, Canvas::frameRateLimited && perfdiag::limiter == 2);
++            const long long swap0 = perfdiag::now_ns(CLOCK_MONOTONIC);
++            perfdiag::swap(g_EglDisplay, g_EglSurface);
++            swapNs = perfdiag::now_ns(CLOCK_MONOTONIC) - swap0;
++        }
++        const long long cpuNs = perfdiag::now_ns(CLOCK_THREAD_CPUTIME_ID) - cpu0;
++        const long long workNs = perfdiag::now_ns(CLOCK_MONOTONIC) - wall0 - swapNs;
++        perfdiag::frame_done(cpuNs, workNs, swapNs, present, damageFraction);
++        if (!present && !(Canvas::frameRateLimited && perfdiag::limiter >= 3)) perfdiag::wait_vsync(run);
+     }
+     CanvasInput::Reset();
+     eglMakeCurrent(g_EglDisplay, nullptr, nullptr, nullptr);
+@@ -670,6 +700,32 @@ Java_git_artdeell_skymodloader_ImGUI_init(JNIEnv *env, jclass clazz, jobject sur
+ }
+ 
+ 
++extern "C"
++JNIEXPORT void JNICALL
++Java_git_artdeell_skymodloader_PerfDiag_nativeConfigure(JNIEnv *env, jclass clazz, jint limiter, jboolean skip, jboolean latch, jboolean limitFps,
++                                                        jint prio, jint depth, jboolean damage, jint cpus, jint nice, jint presentLead,
++                                                        jint lag, jint fallback, jboolean heavy) {
++    perfdiag::limiter = limiter;
++    perfdiag::skipUnchanged = skip;
++    perfdiag::latchReadout = latch;
++    perfdiag::ctxPriority = prio;
++    perfdiag::depthBits = depth;
++    perfdiag::damage = damage;
++    perfdiag::cpuMode = cpus;
++    perfdiag::niceValue = nice;
++    perfdiag::presentLead = presentLead;
++    perfdiag::lagMs = lag;
++    perfdiag::fallbackMs = fallback;
++    perfdiag::heavy = heavy;
++    Canvas::frameRateLimited = limitFps;
++    __android_log_print(ANDROID_LOG_INFO, "CanvasPerf",
++                        "native limiter=%d limitFps=%d skip=%d latch=%d prio=%d depth=%d damage=%d cpus=%d nice=%d ptime=%d "
++                        "lag=%d fallback=%d heavy=%d",
++                        (int)limiter, (int)limitFps, (int)skip, (int)latch, (int)prio, (int)depth, (int)damage, (int)cpus,
++                        (int)nice, (int)presentLead, (int)lag, (int)fallback, (int)heavy);
++    if (limiter >= 3) perfdiag::install_vk_hooks();
++}
++
+ extern "C"
+ JNIEXPORT void JNICALL
+ Java_git_artdeell_skymodloader_ImGUI_shutdown(JNIEnv *env, jclass clazz) {
+diff --git a/app/src/main/cpp/Utils/imgui_androidbk/perfdiag.h b/app/src/main/cpp/Utils/imgui_androidbk/perfdiag.h
+new file mode 100644
+index 0000000..a7d178a
+--- /dev/null
++++ b/app/src/main/cpp/Utils/imgui_androidbk/perfdiag.h
+@@ -0,0 +1,484 @@
++#pragma once
++#include <EGL/egl.h>
++#include <GLES3/gl3.h>
++#include <android/choreographer.h>
++#include <android/log.h>
++#include <android/looper.h>
++#include <errno.h>
++#include <sched.h>
++#include <sys/resource.h>
++#include <time.h>
++#include <unistd.h>
++
++#include <algorithm>
++#include <atomic>
++#include <climits>
++#include <cmath>
++#include <cstdint>
++#include <cstdio>
++#include <cstring>
++#include <string>
++#include <vector>
++
++#include "imgui/imgui.h"
++
++namespace perfdiag {
++inline std::atomic<int> limiter{1};
++inline std::atomic<bool> skipUnchanged{false};
++inline std::atomic<bool> latchReadout{false};
++inline std::atomic<int> ctxPriority{0};
++inline std::atomic<int> depthBits{24};
++inline std::atomic<bool> damage{false};
++inline std::atomic<int> cpuMode{0};
++inline std::atomic<int> niceValue{INT_MIN};
++inline std::atomic<int> presentLead{0};
++inline std::atomic<int> lagMs{0};
++inline std::atomic<int> fallbackMs{100};
++inline std::atomic<bool> heavy{false};
++
++inline long long now_ns(clockid_t clock) {
++    timespec ts{};
++    clock_gettime(clock, &ts);
++    return ts.tv_sec * 1000000000LL + ts.tv_nsec;
++}
++
++inline bool g_looperReady = false;
++inline AChoreographer *g_choreographer = nullptr;
++inline long g_frameTimeNs = 0;
++inline bool g_fired = false;
++inline long g_lastPacedNs = 0;
++inline long g_periodNs = 16666667;
++
++inline void on_frame(long frameTimeNanos, void *) {
++    const long delta = frameTimeNanos - g_frameTimeNs;
++    if (g_frameTimeNs != 0 && delta > 5000000L && delta < 40000000L) g_periodNs = delta;
++    g_frameTimeNs = frameTimeNanos;
++    g_fired = true;
++}
++
++inline AChoreographer *choreographer() {
++    if (!g_looperReady) {
++        g_looperReady = true;
++        ALooper_prepare(ALOOPER_PREPARE_ALLOW_NON_CALLBACKS);
++        g_choreographer = AChoreographer_getInstance();
++        __android_log_print(ANDROID_LOG_INFO, "CanvasPerf", "choreographer %s", g_choreographer ? "ready" : "unavailable");
++    }
++    return g_choreographer;
++}
++
++inline void wait_vsync(const std::atomic<bool> &running) {
++    AChoreographer *c = choreographer();
++    if (!c) {
++        usleep(16667);
++        g_frameTimeNs = (long)now_ns(CLOCK_MONOTONIC);
++        return;
++    }
++    g_fired = false;
++    AChoreographer_postFrameCallback(c, on_frame, nullptr);
++    while (!g_fired && running) ALooper_pollOnce(50, nullptr, nullptr, nullptr);
++}
++
++inline void pace30(const std::atomic<bool> &running) {
++    const long start = g_lastPacedNs;
++    do wait_vsync(running);
++    while (running && start != 0 && g_frameTimeNs - start < 31333333L);
++    g_lastPacedNs = g_frameTimeNs;
++}
++
++inline long read_long(const char *path) {
++    FILE *f = fopen(path, "r");
++    if (!f) return -1;
++    long v = -1;
++    if (fscanf(f, "%ld", &v) != 1) v = -1;
++    fclose(f);
++    return v;
++}
++
++inline std::vector<int> g_cpuClass;
++
++inline void classify_cpus() {
++    if (!g_cpuClass.empty()) return;
++    const int n = static_cast<int>(sysconf(_SC_NPROCESSORS_CONF));
++    std::vector<long> cap(n > 0 ? n : 0);
++    char path[96];
++    for (int i = 0; i < n; ++i) {
++        snprintf(path, sizeof path, "/sys/devices/system/cpu/cpu%d/cpu_capacity", i);
++        cap[i] = read_long(path);
++        if (cap[i] < 0) {
++            snprintf(path, sizeof path, "/sys/devices/system/cpu/cpu%d/cpufreq/cpuinfo_max_freq", i);
++            cap[i] = read_long(path);
++        }
++    }
++    long lo = LONG_MAX, hi = -1;
++    for (long c : cap)
++        if (c >= 0) {
++            lo = std::min(lo, c);
++            hi = std::max(hi, c);
++        }
++    std::string classes;
++    for (int i = 0; i < n; ++i) {
++        const int cls = cap[i] < 0 || hi == lo ? 0 : (cap[i] == lo ? 1 : 2);
++        g_cpuClass.push_back(cls);
++        classes += cls == 1 ? 'L' : cls == 2 ? 'B' : '?';
++    }
++    __android_log_print(ANDROID_LOG_INFO, "CanvasPerf", "cpus n=%d classes=%s", n, classes.c_str());
++}
++
++inline bool on_big_cpu() {
++    const int cpu = sched_getcpu();
++    return cpu >= 0 && cpu < static_cast<int>(g_cpuClass.size()) && g_cpuClass[cpu] == 2;
++}
++
++inline void apply_thread_policy() {
++    classify_cpus();
++    const int mode = cpuMode;
++    if (mode != 0) {
++        cpu_set_t want;
++        CPU_ZERO(&want);
++        int count = 0;
++        for (size_t i = 0; i < g_cpuClass.size(); ++i)
++            if (g_cpuClass[i] == mode) {
++                CPU_SET(i, &want);
++                ++count;
++            }
++        const int r = count ? sched_setaffinity(0, sizeof want, &want) : -1;
++        const int err = r == 0 ? 0 : errno;
++        cpu_set_t got;
++        CPU_ZERO(&got);
++        sched_getaffinity(0, sizeof got, &got);
++        unsigned mask = 0;
++        for (int i = 0; i < 32; ++i)
++            if (CPU_ISSET(i, &got)) mask |= 1u << i;
++        __android_log_print(ANDROID_LOG_INFO, "CanvasPerf", "affinity mode=%d result=%d errno=%d mask=0x%x", mode, r, err,
++                            mask);
++    }
++    const int nice = niceValue;
++    if (nice != INT_MIN) {
++        const int r = setpriority(PRIO_PROCESS, gettid(), nice);
++        const int err = r == 0 ? 0 : errno;
++        __android_log_print(ANDROID_LOG_INFO, "CanvasPerf", "nice requested=%d result=%d errno=%d now=%d", nice, r, err,
++                            getpriority(PRIO_PROCESS, gettid()));
++    }
++}
++
++inline bool has_ext(EGLDisplay d, const char *name) {
++    const char *all = eglQueryString(d, EGL_EXTENSIONS);
++    if (!all) return false;
++    const size_t n = strlen(name);
++    for (const char *p = all; (p = strstr(p, name)) != nullptr; p += n)
++        if ((p == all || p[-1] == ' ') && (p[n] == ' ' || p[n] == '\0')) return true;
++    return false;
++}
++
++constexpr EGLint kContextPriorityLevel = 0x3100;
++constexpr EGLint kContextPriorityHigh = 0x3101;
++constexpr EGLint kContextPriorityLow = 0x3103;
++constexpr EGLint kBufferAge = 0x313D;
++
++inline void context_priority_attribs(EGLDisplay d, EGLint *tail) {
++    const int prio = ctxPriority;
++    if (prio == 0 || !has_ext(d, "EGL_IMG_context_priority")) return;
++    tail[0] = kContextPriorityLevel;
++    tail[1] = prio == 1 ? kContextPriorityLow : kContextPriorityHigh;
++    tail[2] = EGL_NONE;
++}
++
++inline void log_egl(EGLDisplay d, EGLConfig config, EGLContext context) {
++    EGLint depth = -1, stencil = -1, samples = -1, prio = -1;
++    eglGetConfigAttrib(d, config, EGL_DEPTH_SIZE, &depth);
++    eglGetConfigAttrib(d, config, EGL_STENCIL_SIZE, &stencil);
++    eglGetConfigAttrib(d, config, EGL_SAMPLES, &samples);
++    if (context != EGL_NO_CONTEXT) eglQueryContext(d, context, kContextPriorityLevel, &prio);
++    __android_log_print(ANDROID_LOG_INFO, "CanvasPerf",
++                        "egl depth=%d stencil=%d samples=%d prio=0x%x requested_prio=%d partial_update=%d "
++                        "swap_damage=%d ptime=%d",
++                        depth, stencil, samples, prio, ctxPriority.load(), has_ext(d, "EGL_KHR_partial_update"),
++                        has_ext(d, "EGL_KHR_swap_buffers_with_damage"), has_ext(d, "EGL_ANDROID_presentation_time"));
++}
++
++using SetDamageFn = EGLBoolean (*)(EGLDisplay, EGLSurface, EGLint *, EGLint);
++using SwapDamageFn = EGLBoolean (*)(EGLDisplay, EGLSurface, const EGLint *, EGLint);
++using PresentTimeFn = EGLBoolean (*)(EGLDisplay, EGLSurface, int64_t);
++inline bool g_procsLoaded = false;
++inline SetDamageFn g_setDamage = nullptr;
++inline SwapDamageFn g_swapDamage = nullptr;
++inline PresentTimeFn g_presentTime = nullptr;
++
++inline void load_procs() {
++    if (g_procsLoaded) return;
++    g_procsLoaded = true;
++    g_setDamage = reinterpret_cast<SetDamageFn>(eglGetProcAddress("eglSetDamageRegionKHR"));
++    g_swapDamage = reinterpret_cast<SwapDamageFn>(eglGetProcAddress("eglSwapBuffersWithDamageKHR"));
++    g_presentTime = reinterpret_cast<PresentTimeFn>(eglGetProcAddress("eglPresentationTimeANDROID"));
++    __android_log_print(ANDROID_LOG_INFO, "CanvasPerf", "procs set_damage=%d swap_damage=%d present_time=%d",
++                        g_setDamage != nullptr, g_swapDamage != nullptr, g_presentTime != nullptr);
++}
++
++struct Rect {
++    int x0 = 0, y0 = 0, x1 = 0, y1 = 0;
++    bool empty() const { return x1 <= x0 || y1 <= y0; }
++};
++
++inline Rect unite(const Rect &a, const Rect &b) {
++    if (a.empty()) return b;
++    if (b.empty()) return a;
++    return {std::min(a.x0, b.x0), std::min(a.y0, b.y0), std::max(a.x1, b.x1), std::max(a.y1, b.y1)};
++}
++
++inline Rect intersect(const Rect &a, const Rect &b) {
++    Rect r{std::max(a.x0, b.x0), std::max(a.y0, b.y0), std::min(a.x1, b.x1), std::min(a.y1, b.y1)};
++    return r.empty() ? Rect{} : r;
++}
++
++inline Rect drawn_rect(const ImDrawData *dd, int w, int h) {
++    Rect r;
++    if (!dd) return r;
++    for (int n = 0; n < dd->CmdListsCount; ++n) {
++        const ImDrawList *list = dd->CmdLists[n];
++        Rect clip;
++        for (const ImDrawCmd &c : list->CmdBuffer) {
++            if (c.UserCallback != nullptr) {
++                if (c.UserCallback == ImDrawCallback_ResetRenderState) continue;
++                return {0, 0, w, h};
++            }
++            if (c.ElemCount == 0) continue;
++            clip = unite(clip, Rect{static_cast<int>(std::floor(c.ClipRect.x)), static_cast<int>(std::floor(c.ClipRect.y)),
++                                    static_cast<int>(std::ceil(c.ClipRect.z)), static_cast<int>(std::ceil(c.ClipRect.w))});
++        }
++        if (clip.empty() || list->VtxBuffer.Size == 0) continue;
++        float x0 = list->VtxBuffer[0].pos.x, y0 = list->VtxBuffer[0].pos.y, x1 = x0, y1 = y0;
++        for (const ImDrawVert &v : list->VtxBuffer) {
++            x0 = std::min(x0, v.pos.x);
++            y0 = std::min(y0, v.pos.y);
++            x1 = std::max(x1, v.pos.x);
++            y1 = std::max(y1, v.pos.y);
++        }
++        const Rect verts{static_cast<int>(std::floor(x0)) - 2, static_cast<int>(std::floor(y0)) - 2,
++                         static_cast<int>(std::ceil(x1)) + 2, static_cast<int>(std::ceil(y1)) + 2};
++        r = unite(r, intersect(intersect(verts, clip), Rect{0, 0, w, h}));
++    }
++    return r;
++}
++
++inline Rect g_history[8];
++inline int g_historyCount = 0;
++inline EGLint g_damageRect[4] = {0, 0, 0, 0};
++inline bool g_damageSet = false;
++inline int g_damageLogged = 0;
++inline int g_fullFrames = 0;
++
++inline void reset_damage() {
++    g_historyCount = 0;
++    g_damageSet = false;
++}
++
++inline double clear_damaged(EGLDisplay d, EGLSurface s, const ImDrawData *dd, int w, int h) {
++    load_procs();
++    const Rect cur = drawn_rect(dd, w, h);
++    EGLint age = 0;
++    if (!eglQuerySurface(d, s, kBufferAge, &age)) age = 0;
++    Rect dmg = cur;
++    const bool full = age <= 0 || age > g_historyCount;
++    if (full) {
++        dmg = {0, 0, w, h};
++        ++g_fullFrames;
++    }
++    else
++        for (int i = 0; i < age; ++i) dmg = unite(dmg, g_history[i]);
++    for (int i = std::min(g_historyCount, 7); i > 0; --i) g_history[i] = g_history[i - 1];
++    g_history[0] = cur;
++    g_historyCount = std::min(g_historyCount + 1, 8);
++    if (dmg.empty()) dmg = {0, 0, 1, 1};
++    g_damageRect[0] = dmg.x0;
++    g_damageRect[1] = h - dmg.y1;
++    g_damageRect[2] = dmg.x1 - dmg.x0;
++    g_damageRect[3] = dmg.y1 - dmg.y0;
++    g_damageSet = g_setDamage != nullptr && g_setDamage(d, s, g_damageRect, 1) == EGL_TRUE;
++    if (g_damageLogged < 6) {
++        ++g_damageLogged;
++        __android_log_print(ANDROID_LOG_INFO, "CanvasPerf", "damage age=%d drawn=%d,%d,%d,%d rect=%d,%d,%d,%d set=%d", age,
++                            cur.x0, cur.y0, cur.x1, cur.y1, g_damageRect[0], g_damageRect[1], g_damageRect[2],
++                            g_damageRect[3], g_damageSet);
++    }
++    glEnable(GL_SCISSOR_TEST);
++    glScissor(g_damageRect[0], g_damageRect[1], g_damageRect[2], g_damageRect[3]);
++    glClear(GL_COLOR_BUFFER_BIT);
++    glDisable(GL_SCISSOR_TEST);
++    return w > 0 && h > 0 ? static_cast<double>(g_damageRect[2]) * g_damageRect[3] / (static_cast<double>(w) * h) : 1.0;
++}
++
++inline void set_present_time(EGLDisplay d, EGLSurface s, bool paced) {
++    const int lead = presentLead;
++    if (lead <= 0 || !paced || g_lastPacedNs == 0) return;
++    load_procs();
++    if (g_presentTime)
++        g_presentTime(d, s, static_cast<int64_t>(g_lastPacedNs) + static_cast<int64_t>(lead) * g_periodNs);
++}
++
++inline void swap(EGLDisplay d, EGLSurface s) {
++    if (damage && g_damageSet && g_swapDamage) g_swapDamage(d, s, g_damageRect, 1);
++    else eglSwapBuffers(d, s);
++}
++
++struct CmdKey {
++    ImVec4 clip;
++    ImTextureID texture;
++    unsigned int vtxOffset, idxOffset, elemCount;
++    unsigned int pad;
++};
++struct ListCopy {
++    std::vector<ImDrawVert> vtx;
++    std::vector<ImDrawIdx> idx;
++    std::vector<CmdKey> cmds;
++};
++inline std::vector<ListCopy> g_prevLists;
++inline std::vector<CmdKey> g_scratchCmds;
++inline bool g_haveLast = false;
++
++inline void reset_skip() {
++    g_haveLast = false;
++    g_prevLists.clear();
++}
++
++inline bool frame_changed(const ImDrawData *dd) {
++    const int lists = dd ? dd->CmdListsCount : 0;
++    bool changed = !g_haveLast || lists != static_cast<int>(g_prevLists.size());
++    g_prevLists.resize(lists);
++    for (int n = 0; n < lists; ++n) {
++        const ImDrawList *list = dd->CmdLists[n];
++        ListCopy &prev = g_prevLists[n];
++        g_scratchCmds.clear();
++        for (const ImDrawCmd &c : list->CmdBuffer)
++            g_scratchCmds.push_back({c.ClipRect, c.TextureId, c.VtxOffset, c.IdxOffset, c.ElemCount, 0u});
++        const bool same =
++            prev.vtx.size() == static_cast<size_t>(list->VtxBuffer.Size) &&
++            prev.idx.size() == static_cast<size_t>(list->IdxBuffer.Size) && prev.cmds.size() == g_scratchCmds.size() &&
++            std::memcmp(prev.vtx.data(), list->VtxBuffer.Data, sizeof(ImDrawVert) * prev.vtx.size()) == 0 &&
++            std::memcmp(prev.idx.data(), list->IdxBuffer.Data, sizeof(ImDrawIdx) * prev.idx.size()) == 0 &&
++            std::memcmp(prev.cmds.data(), g_scratchCmds.data(), sizeof(CmdKey) * prev.cmds.size()) == 0;
++        if (!same) {
++            changed = true;
++            prev.vtx.assign(list->VtxBuffer.Data, list->VtxBuffer.Data + list->VtxBuffer.Size);
++            prev.idx.assign(list->IdxBuffer.Data, list->IdxBuffer.Data + list->IdxBuffer.Size);
++            prev.cmds = g_scratchCmds;
++        }
++    }
++    g_haveLast = true;
++    return changed;
++}
++
++inline float framerate() {
++    if (!latchReadout) return ImGui::GetIO().Framerate;
++    static float value = 0.0f;
++    static double last = -1.0;
++    const double now = ImGui::GetTime();
++    if (last < 0.0 || now - last >= 0.5) {
++        value = ImGui::GetIO().Framerate;
++        last = now;
++    }
++    return value;
++}
++
++// A stand-in for a large open menu with a live value: a window over the right 42% of
++// the screen with a frame-time graph, so it changes every frame. It takes no input and
++// stays clear of the centre, where the runner looks for Sky's Play button.
++inline void draw_heavy() {
++    if (!heavy) return;
++    static float history[120] = {};
++    static int head = 0;
++    static bool flags[32] = {};
++    static float values[32] = {};
++    history[head] = ImGui::GetIO().DeltaTime * 1000.0f;
++    head = (head + 1) % 120;
++    const ImVec2 size = ImGui::GetIO().DisplaySize;
++    ImGui::SetNextWindowPos(ImVec2(size.x * 0.56f, size.y * 0.04f), ImGuiCond_Always);
++    ImGui::SetNextWindowSize(ImVec2(size.x * 0.42f, size.y * 0.92f), ImGuiCond_Always);
++    ImGui::Begin("Perf heavy", nullptr, ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoSavedSettings);
++    ImGui::PlotLines("frame ms", history, 120, head, nullptr, 0.0f, 50.0f, ImVec2(0.0f, size.y * 0.2f));
++    for (int i = 0; i < 32; ++i) {
++        ImGui::PushID(i);
++        ImGui::Checkbox("##on", &flags[i]);
++        ImGui::SameLine();
++        values[i] = 0.5f + 0.5f * std::sin(static_cast<float>(ImGui::GetTime()) + i);
++        ImGui::SliderFloat("option", &values[i], 0.0f, 1.0f);
++        ImGui::PopID();
++    }
++    ImGui::End();
++}
++
++struct Stats {
++    long long secStart = 0;
++    long long threadCpuStart = 0;
++    long long workCpuNs = 0;
++    int frames = 0, presented = 0, skipped = 0, bigFrames = 0, damaged = 0, trigTimeouts = 0, fallbacks = 0;
++    double damageSum = 0.0;
++    std::vector<int> cpuUs, workUs, swapUs, trigUs, fenceUs;
++    bool loggedAtlas = false;
++};
++inline Stats g_stats;
++inline std::atomic<int> g_gamePresents{0};
++inline std::atomic<long long> g_hookNs{0};
++
++inline int pct(const std::vector<int> &sorted, double p) {
++    if (sorted.empty()) return -1;
++    return sorted[static_cast<size_t>(p * (sorted.size() - 1) + 0.5)];
++}
++
++inline void frame_done(long long cpuNs, long long workNs, long long swapNs, bool presented, double damageFraction) {
++    Stats &s = g_stats;
++    const long long now = now_ns(CLOCK_MONOTONIC);
++    if (s.secStart == 0) {
++        s.secStart = now;
++        s.threadCpuStart = now_ns(CLOCK_THREAD_CPUTIME_ID);
++    }
++    ++s.frames;
++    if (presented) ++s.presented; else ++s.skipped;
++    if (on_big_cpu()) ++s.bigFrames;
++    if (damageFraction >= 0.0) {
++        ++s.damaged;
++        s.damageSum += damageFraction;
++    }
++    s.workCpuNs += cpuNs;
++    s.cpuUs.push_back(static_cast<int>(cpuNs / 1000));
++    s.workUs.push_back(static_cast<int>(workNs / 1000));
++    if (presented) s.swapUs.push_back(static_cast<int>(swapNs / 1000));
++    if (!s.loggedAtlas) {
++        s.loggedAtlas = true;
++        ImFontAtlas *atlas = ImGui::GetIO().Fonts;
++        int glyphs = 0;
++        for (ImFont *font : atlas->Fonts) glyphs += font->Glyphs.Size;
++        __android_log_print(ANDROID_LOG_INFO, "CanvasPerf", "atlas width=%d height=%d glyphs=%d fonts=%d",
++                            atlas->TexWidth, atlas->TexHeight, glyphs, atlas->Fonts.Size);
++    }
++    if (now - s.secStart < 1000000000LL) return;
++    const long long threadCpu = now_ns(CLOCK_THREAD_CPUTIME_ID);
++    std::sort(s.cpuUs.begin(), s.cpuUs.end());
++    std::sort(s.workUs.begin(), s.workUs.end());
++    std::sort(s.swapUs.begin(), s.swapUs.end());
++    std::sort(s.trigUs.begin(), s.trigUs.end());
++    std::sort(s.fenceUs.begin(), s.fenceUs.end());
++    const int gamePresents = g_gamePresents.exchange(0);
++    const long long hookNs = g_hookNs.exchange(0);
++    __android_log_print(ANDROID_LOG_INFO, "CanvasPerf",
++                        "sec mono_ms=%lld span_ms=%.1f frames=%d presented=%d skipped=%d thread_cpu_ms=%.2f "
++                        "work_cpu_ms=%.2f cpu_us_p50=%d cpu_us_p95=%d cpu_us_max=%d work_us_p50=%d work_us_p95=%d "
++                        "swap_us_p50=%d swap_us_p95=%d swap_us_max=%d big_frames=%d damage_pct=%.1f full_frames=%d "
++                        "game_presents=%d hook_us_avg=%.1f trig_us_p50=%d trig_us_p95=%d fence_us_p50=%d fence_us_p95=%d "
++                        "trig_timeouts=%d fallback_frames=%d",
++                        now / 1000000LL, (now - s.secStart) / 1e6, s.frames, s.presented, s.skipped,
++                        (threadCpu - s.threadCpuStart) / 1e6, s.workCpuNs / 1e6, pct(s.cpuUs, 0.5),
++                        pct(s.cpuUs, 0.95), s.cpuUs.empty() ? -1 : s.cpuUs.back(), pct(s.workUs, 0.5),
++                        pct(s.workUs, 0.95), pct(s.swapUs, 0.5), pct(s.swapUs, 0.95),
++                        s.swapUs.empty() ? -1 : s.swapUs.back(), s.bigFrames,
++                        s.damaged ? 100.0 * s.damageSum / s.damaged : -1.0, g_fullFrames,
++                        gamePresents, gamePresents ? hookNs / 1000.0 / gamePresents : -1.0, pct(s.trigUs, 0.5),
++                        pct(s.trigUs, 0.95), pct(s.fenceUs, 0.5),
++                        pct(s.fenceUs, 0.95), s.trigTimeouts, s.fallbacks);
++    g_fullFrames = 0;
++    const bool atlasDone = s.loggedAtlas;
++    s = Stats();
++    s.loggedAtlas = atlasDone;
++    s.secStart = now;
++    s.threadCpuStart = threadCpu;
++}
++}
+diff --git a/app/src/main/cpp/Utils/imgui_androidbk/perfdiag_vk.h b/app/src/main/cpp/Utils/imgui_androidbk/perfdiag_vk.h
+new file mode 100644
+index 0000000..69f9222
+--- /dev/null
++++ b/app/src/main/cpp/Utils/imgui_androidbk/perfdiag_vk.h
+@@ -0,0 +1,247 @@
++#pragma once
++#define VK_NO_PROTOTYPES
++#include <vulkan/vulkan.h>
++#include <dlfcn.h>
++#include <shadowhook.h>
++
++#include <chrono>
++#include <condition_variable>
++#include <iterator>
++#include <mutex>
++
++#include "perfdiag.h"
++
++// Sky renders with Vulkan. Hooking the presentation functions every caller ends in lets
++// the overlay draw right after the game presents a frame (limiter 3), or once that
++// frame has finished on the GPU (limiter 4, an empty submit with a fence on the game's
++// queue).
++namespace perfdiag {
++inline PFN_vkQueuePresentKHR g_origPresent = nullptr;
++inline PFN_vkQueuePresentKHR g_origPresentExported = nullptr;
++inline PFN_vkAcquireNextImageKHR g_origAcquire = nullptr;
++inline PFN_vkGetDeviceProcAddr g_gdpa = nullptr;
++inline std::atomic<VkDevice> g_gameDevice{VK_NULL_HANDLE};
++
++struct DeviceFns {
++    VkDevice device = VK_NULL_HANDLE;
++    PFN_vkQueueSubmit queueSubmit = nullptr;
++    PFN_vkCreateFence createFence = nullptr;
++    PFN_vkResetFences resetFences = nullptr;
++    PFN_vkGetFenceStatus getFenceStatus = nullptr;
++    PFN_vkWaitForFences waitForFences = nullptr;
++};
++constexpr int kFenceRing = 8;
++inline DeviceFns g_fns;
++inline VkFence g_fenceRing[kFenceRing] = {};
++inline int g_fenceNext = 0;
++
++struct Trigger {
++    uint64_t seq = 0;
++    long long ns = 0;
++    VkFence fence = VK_NULL_HANDLE;
++    VkDevice device = VK_NULL_HANDLE;
++    PFN_vkWaitForFences wait = nullptr;
++};
++inline std::mutex g_trigMutex;
++inline std::condition_variable g_trigCv;
++inline Trigger g_trig;
++inline thread_local int t_presentDepth = 0;
++
++inline bool load_device_fns(VkDevice device) {
++    if (g_fns.device == device) return g_fns.queueSubmit != nullptr;
++    g_fns = DeviceFns();
++    g_fns.device = device;
++    std::fill(std::begin(g_fenceRing), std::end(g_fenceRing), VK_NULL_HANDLE);
++    g_fenceNext = 0;
++    if (!g_gdpa) return false;
++    g_fns.queueSubmit = reinterpret_cast<PFN_vkQueueSubmit>(g_gdpa(device, "vkQueueSubmit"));
++    g_fns.createFence = reinterpret_cast<PFN_vkCreateFence>(g_gdpa(device, "vkCreateFence"));
++    g_fns.resetFences = reinterpret_cast<PFN_vkResetFences>(g_gdpa(device, "vkResetFences"));
++    g_fns.getFenceStatus = reinterpret_cast<PFN_vkGetFenceStatus>(g_gdpa(device, "vkGetFenceStatus"));
++    g_fns.waitForFences = reinterpret_cast<PFN_vkWaitForFences>(g_gdpa(device, "vkWaitForFences"));
++    const bool ok = g_fns.queueSubmit && g_fns.createFence && g_fns.resetFences && g_fns.getFenceStatus && g_fns.waitForFences;
++    if (!ok) g_fns.queueSubmit = nullptr;
++    __android_log_print(ANDROID_LOG_INFO, "CanvasPerf", "vkdevice device=%p fns=%d", device, ok);
++    return ok;
++}
++
++inline VkFence submit_fence(VkQueue queue) {
++    const VkDevice device = g_gameDevice.load(std::memory_order_relaxed);
++    if (device == VK_NULL_HANDLE || !load_device_fns(device)) return VK_NULL_HANDLE;
++    VkFence &fence = g_fenceRing[g_fenceNext];
++    if (fence == VK_NULL_HANDLE) {
++        VkFenceCreateInfo info{};
++        info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
++        if (g_fns.createFence(device, &info, nullptr, &fence) != VK_SUCCESS) {
++            fence = VK_NULL_HANDLE;
++            return VK_NULL_HANDLE;
++        }
++    } else if (g_fns.getFenceStatus(device, fence) != VK_SUCCESS || g_fns.resetFences(device, 1, &fence) != VK_SUCCESS) {
++        return VK_NULL_HANDLE;
++    }
++    if (g_fns.queueSubmit(queue, 0, nullptr, fence) != VK_SUCCESS) {
++        fence = VK_NULL_HANDLE;
++        return VK_NULL_HANDLE;
++    }
++    const VkFence submitted = fence;
++    g_fenceNext = (g_fenceNext + 1) % kFenceRing;
++    return submitted;
++}
++
++inline VkResult present_common(PFN_vkQueuePresentKHR orig, VkQueue queue, const VkPresentInfoKHR *info) {
++    if (t_presentDepth > 0) return orig(queue, info);
++    ++t_presentDepth;
++    const long long h0 = now_ns(CLOCK_MONOTONIC);
++    g_gamePresents.fetch_add(1, std::memory_order_relaxed);
++    const VkFence fence = limiter == 4 ? submit_fence(queue) : VK_NULL_HANDLE;
++    const long long h1 = now_ns(CLOCK_MONOTONIC);
++    const VkResult result = orig(queue, info);
++    const long long h2 = now_ns(CLOCK_MONOTONIC);
++    {
++        std::lock_guard<std::mutex> lock(g_trigMutex);
++        ++g_trig.seq;
++        g_trig.ns = h2;
++        g_trig.fence = fence;
++        g_trig.device = g_fns.device;
++        g_trig.wait = g_fns.waitForFences;
++    }
++    g_trigCv.notify_one();
++    g_hookNs.fetch_add((h1 - h0) + (now_ns(CLOCK_MONOTONIC) - h2), std::memory_order_relaxed);
++    --t_presentDepth;
++    return result;
++}
++
++inline VkResult VKAPI_CALL hooked_present(VkQueue queue, const VkPresentInfoKHR *info) {
++    return present_common(g_origPresent, queue, info);
++}
++
++inline VkResult VKAPI_CALL hooked_present_exported(VkQueue queue, const VkPresentInfoKHR *info) {
++    return present_common(g_origPresentExported, queue, info);
++}
++
++inline VkResult VKAPI_CALL hooked_acquire(VkDevice device, VkSwapchainKHR swapchain, uint64_t timeout,
++                                          VkSemaphore semaphore, VkFence fence, uint32_t *index) {
++    g_gameDevice.store(device, std::memory_order_relaxed);
++    return g_origAcquire(device, swapchain, timeout, semaphore, fence, index);
++}
++
++inline void *hook(void *target, void *proxy, void **orig, int &err) {
++    if (!target) return nullptr;
++    void *stub = shadowhook_hook_func_addr_2(target, proxy, orig, SHADOWHOOK_HOOK_WITH_MULTI_MODE);
++    if (!stub) err = shadowhook_get_errno();
++    return stub;
++}
++
++// The functions behind vkGetDeviceProcAddr are the same for every device, so a
++// throwaway device tells where the game's calls land, whenever it looked them up.
++inline void install_vk_hooks() {
++    static std::once_flag once;
++    std::call_once(once, [] {
++        void *lib = dlopen("libvulkan.so", RTLD_NOW | RTLD_LOCAL);
++        auto gipa = lib ? reinterpret_cast<PFN_vkGetInstanceProcAddr>(dlsym(lib, "vkGetInstanceProcAddr")) : nullptr;
++        g_gdpa = lib ? reinterpret_cast<PFN_vkGetDeviceProcAddr>(dlsym(lib, "vkGetDeviceProcAddr")) : nullptr;
++        auto createInstance = gipa ? reinterpret_cast<PFN_vkCreateInstance>(gipa(VK_NULL_HANDLE, "vkCreateInstance")) : nullptr;
++        if (!createInstance || !g_gdpa) {
++            __android_log_print(ANDROID_LOG_INFO, "CanvasPerf", "vkhook unavailable lib=%p", lib);
++            return;
++        }
++        const char *instanceExts[] = {"VK_KHR_surface", "VK_KHR_android_surface"};
++        VkApplicationInfo app{};
++        app.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
++        app.pApplicationName = "CanvasPerf";
++        app.apiVersion = VK_API_VERSION_1_0;
++        VkInstanceCreateInfo ici{};
++        ici.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
++        ici.pApplicationInfo = &app;
++        ici.enabledExtensionCount = 2;
++        ici.ppEnabledExtensionNames = instanceExts;
++        VkInstance instance = VK_NULL_HANDLE;
++        const VkResult ir = createInstance(&ici, nullptr, &instance);
++        if (ir != VK_SUCCESS) {
++            __android_log_print(ANDROID_LOG_INFO, "CanvasPerf", "vkhook instance failed result=%d", ir);
++            return;
++        }
++        auto destroyInstance = reinterpret_cast<PFN_vkDestroyInstance>(gipa(instance, "vkDestroyInstance"));
++        auto enumerate = reinterpret_cast<PFN_vkEnumeratePhysicalDevices>(gipa(instance, "vkEnumeratePhysicalDevices"));
++        auto createDevice = reinterpret_cast<PFN_vkCreateDevice>(gipa(instance, "vkCreateDevice"));
++        auto gdpa = reinterpret_cast<PFN_vkGetDeviceProcAddr>(gipa(instance, "vkGetDeviceProcAddr"));
++        void *present = nullptr, *acquire = nullptr;
++        VkResult dr = VK_ERROR_INITIALIZATION_FAILED;
++        VkPhysicalDevice physical = VK_NULL_HANDLE;
++        uint32_t count = 1;
++        const VkResult er = enumerate ? enumerate(instance, &count, &physical) : VK_ERROR_INITIALIZATION_FAILED;
++        if ((er == VK_SUCCESS || er == VK_INCOMPLETE) && count > 0 && createDevice && gdpa) {
++            const float priority = 1.0f;
++            VkDeviceQueueCreateInfo queue{};
++            queue.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
++            queue.queueFamilyIndex = 0;
++            queue.queueCount = 1;
++            queue.pQueuePriorities = &priority;
++            const char *deviceExts[] = {"VK_KHR_swapchain"};
++            VkDeviceCreateInfo dci{};
++            dci.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
++            dci.queueCreateInfoCount = 1;
++            dci.pQueueCreateInfos = &queue;
++            dci.enabledExtensionCount = 1;
++            dci.ppEnabledExtensionNames = deviceExts;
++            VkDevice device = VK_NULL_HANDLE;
++            dr = createDevice(physical, &dci, nullptr, &device);
++            if (dr == VK_SUCCESS) {
++                present = reinterpret_cast<void *>(gdpa(device, "vkQueuePresentKHR"));
++                acquire = reinterpret_cast<void *>(gdpa(device, "vkAcquireNextImageKHR"));
++                auto destroyDevice = reinterpret_cast<PFN_vkDestroyDevice>(gdpa(device, "vkDestroyDevice"));
++                if (destroyDevice) destroyDevice(device, nullptr);
++            }
++        }
++        if (destroyInstance) destroyInstance(instance, nullptr);
++        void *exported = dlsym(lib, "vkQueuePresentKHR");
++        int errPresent = 0, errExported = 0, errAcquire = 0;
++        void *stubPresent = hook(present, reinterpret_cast<void *>(hooked_present), reinterpret_cast<void **>(&g_origPresent), errPresent);
++        void *stubExported = exported != present ? hook(exported, reinterpret_cast<void *>(hooked_present_exported),
++                                                        reinterpret_cast<void **>(&g_origPresentExported), errExported) : nullptr;
++        void *stubAcquire = hook(acquire, reinterpret_cast<void *>(hooked_acquire), reinterpret_cast<void **>(&g_origAcquire), errAcquire);
++        __android_log_print(ANDROID_LOG_INFO, "CanvasPerf",
++                            "vkhook device_result=%d present=%p hooked=%d err=%d exported=%p hooked=%d err=%d acquire=%p hooked=%d err=%d",
++                            dr, present, stubPresent != nullptr, errPresent, exported, stubExported != nullptr, errExported,
++                            acquire, stubAcquire != nullptr, errAcquire);
++    });
++}
++
++// The overlay's frame starts when the game has presented a new frame (and, with a
++// fence, when that frame is done on the GPU), plus an optional lag. Without game frames
++// for the fallback time it draws at one vsync; limiter 5 then keeps drawing every vsync
++// until the game presents again, so the menu stays smooth while the game loads.
++inline void wait_game_frame(const std::atomic<bool> &running) {
++    static uint64_t seen = 0;
++    const long long fallbackNs = fallbackMs * 1000000LL;
++    Trigger t;
++    bool stale;
++    {
++        std::unique_lock<std::mutex> lock(g_trigMutex);
++        stale = limiter == 5 && g_trig.seq == seen && now_ns(CLOCK_MONOTONIC) - g_trig.ns > fallbackNs;
++        if (!stale)
++            g_trigCv.wait_for(lock, std::chrono::nanoseconds(fallbackNs), [&] { return g_trig.seq != seen || !running; });
++        t = g_trig;
++    }
++    if (!running) return;
++    if (t.seq == seen) {
++        if (stale) ++g_stats.fallbacks;
++        else ++g_stats.trigTimeouts;
++        wait_vsync(running);
++        return;
++    }
++    seen = t.seq;
++    if (t.fence != VK_NULL_HANDLE && t.wait) {
++        const long long w0 = now_ns(CLOCK_MONOTONIC);
++        t.wait(t.device, 1, &t.fence, VK_TRUE, 50000000ULL);
++        g_stats.fenceUs.push_back(static_cast<int>((now_ns(CLOCK_MONOTONIC) - w0) / 1000));
++    }
++    const int lag = lagMs;
++    if (lag > 0) {
++        const long long until = t.ns + lag * 1000000LL;
++        const timespec ts{static_cast<time_t>(until / 1000000000LL), static_cast<long>(until % 1000000000LL)};
++        clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &ts, nullptr);
++    }
++    g_stats.trigUs.push_back(static_cast<int>((now_ns(CLOCK_MONOTONIC) - t.ns) / 1000));
++}
++}
+diff --git a/app/src/main/cpp/main.cpp b/app/src/main/cpp/main.cpp
+index 4f3681d..719e32b 100644
+--- a/app/src/main/cpp/main.cpp
++++ b/app/src/main/cpp/main.cpp
+@@ -9,6 +9,7 @@
+ #include "Core/imgui/imgui.h"
+ #include "Core/imgui/imgui_internal.h"
+ #include "Utils/imgui_androidbk/androidbk.h"
++#include "Utils/imgui_androidbk/perfdiag.h"
+ #include "include/misc/Vector3.h"
+ #include <atomic>
+ #include <cmath>
+@@ -213,8 +214,8 @@ PRIVATE_API void Canvas::CanvasMenu() {
+     DrawMods();
+     ImGui::Text(
+             "Application average %.3f ms/frame (%.1f FPS)",
+-            1000.0f / ImGui::GetIO().Framerate,
+-            ImGui::GetIO().Framerate
++            1000.0f / perfdiag::framerate(),
++            perfdiag::framerate()
+     );
+     ImGui::Checkbox("Limit FPS", &Canvas::frameRateLimited);
+     ImGui::End();
+diff --git a/app/src/main/java/com/tgc/sky/GameActivity.java b/app/src/main/java/com/tgc/sky/GameActivity.java
+index 708d2a1..26241f7 100644
+--- a/app/src/main/java/com/tgc/sky/GameActivity.java
++++ b/app/src/main/java/com/tgc/sky/GameActivity.java
+@@ -244,9 +244,14 @@ public class GameActivity extends TGCNativeActivity implements View.OnCapturedPo
+         FileSelector.setActivity(this);
+         if (imgui == null) imgui = new ImGUI();
+         imguiView = findViewById(R.id.imguiView);
+-        imguiView.getHolder().setFormat(PixelFormat.TRANSLUCENT);
+-        imguiView.getHolder().addCallback(imgui);
+-        imguiView.setZOrderOnTop(true);
++        if (git.artdeell.skymodloader.PerfDiag.overlayEnabled()) {
++            imguiView.getHolder().setFormat(PixelFormat.TRANSLUCENT);
++            imguiView.getHolder().addCallback(imgui);
++            imguiView.setZOrderOnTop(true);
++        } else {
++            imguiView.setVisibility(View.GONE);
++        }
++        Log.i(git.artdeell.skymodloader.PerfDiag.TAG, "gameactivity created overlay=" + git.artdeell.skymodloader.PerfDiag.overlayEnabled());
+         ImGUI.setClipboardService((ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE));
+         imguiInput = findViewById(R.id.imguiInput);
+         FMOD.init(this);
+diff --git a/app/src/main/java/com/tgc/sky/SystemIO_android.java b/app/src/main/java/com/tgc/sky/SystemIO_android.java
+index d40daac..22c1e64 100644
+--- a/app/src/main/java/com/tgc/sky/SystemIO_android.java
++++ b/app/src/main/java/com/tgc/sky/SystemIO_android.java
+@@ -1407,7 +1407,26 @@ public class SystemIO_android {
+         return 0L;
+     }
+ 
++    private static volatile boolean sThermalListening = false;
++
+     public int GetCurrentThermalStatus() {
++        int status = thermalStatusForGame();
++        git.artdeell.skymodloader.PerfDiag.thermalCall(status, this.m_activity);
++        return status;
++    }
++
++    private int thermalStatusForGame() {
++        if (git.artdeell.skymodloader.PerfDiag.liveThermal()) {
++            if (!sThermalListening && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && this.m_activity != null) {
++                android.os.PowerManager powerManager = (android.os.PowerManager) this.m_activity.getSystemService(Context.POWER_SERVICE);
++                if (powerManager != null) {
++                    sThermalStatus = powerManager.getCurrentThermalStatus();
++                    powerManager.addThermalStatusListener(this.m_activity.getMainExecutor(), status -> sThermalStatus = status);
++                    sThermalListening = true;
++                }
++            }
++            return sThermalStatus == -1 ? 0 : sThermalStatus;
++        }
+         if (sThermalStatus != -1) {
+             return sThermalStatus;
+         }
+diff --git a/app/src/main/java/com/tgc/sky/SystemUI_android.java b/app/src/main/java/com/tgc/sky/SystemUI_android.java
+index 2f815cc..bcd6fda 100644
+--- a/app/src/main/java/com/tgc/sky/SystemUI_android.java
++++ b/app/src/main/java/com/tgc/sky/SystemUI_android.java
+@@ -1369,7 +1369,7 @@ public class SystemUI_android {
+             try {
+                 Uri uri = FileProvider.getUriForFile(
+                         SystemUI_android.this.m_activity,
+-                        "git.artdeell.skymodloader.provider",
++                        SystemUI_android.this.m_activity.getPackageName() + ".provider",
+                         new java.io.File(path));
+                 Intent send = new Intent(Intent.ACTION_SEND);
+                 send.setType(mimeType != null && !mimeType.isEmpty() ? mimeType : "application/octet-stream");
+diff --git a/app/src/main/java/git/artdeell/skymodloader/ImGUI.java b/app/src/main/java/git/artdeell/skymodloader/ImGUI.java
+index 2caa798..931ace5 100644
+--- a/app/src/main/java/git/artdeell/skymodloader/ImGUI.java
++++ b/app/src/main/java/git/artdeell/skymodloader/ImGUI.java
+@@ -65,7 +65,8 @@ public class ImGUI implements SurfaceHolder.Callback{
+                 resurface(surfaceHolder.getSurface());
+             }else{
+                 thread.hasInitialized = true;
+-                init(surfaceHolder.getSurface(), Utils.sp2px(14), Utils.dp2px(1.2f), SMLApplication.smlRes.getAssets(), true);
++                PerfDiag.configureNative();
++                init(surfaceHolder.getSurface(), Utils.sp2px(14), Utils.dp2px(1.2f), SMLApplication.smlRes.getAssets(), PerfDiag.cjkFont());
+             }
+         });
+     }
+diff --git a/app/src/main/java/git/artdeell/skymodloader/MainActivity.java b/app/src/main/java/git/artdeell/skymodloader/MainActivity.java
+index 6b9c8c0..a24978a 100644
+--- a/app/src/main/java/git/artdeell/skymodloader/MainActivity.java
++++ b/app/src/main/java/git/artdeell/skymodloader/MainActivity.java
+@@ -73,6 +73,8 @@ public class MainActivity extends Activity {
+         SKY_PACKAGE_NAME = sharedPreferences.getString("sky_package_name", "com.tgc.sky.android");
+         ceserverEnabled = sharedPreferences.getBoolean("ceserver", false);
+         hideCanvasMenu = sharedPreferences.getBoolean("hide_canvas_menu", false);
++        String perfMenu = PerfDiag.get("menu", null);
++        if (perfMenu != null) hideCanvasMenu = perfMenu.equals("hidden");
+ 
+         sharedPreferences.edit().putString("sky_package_name", SKY_PACKAGE_NAME).apply();
+         skyPackages = new HashMap<>();
+diff --git a/app/src/main/java/git/artdeell/skymodloader/PerfDiag.java b/app/src/main/java/git/artdeell/skymodloader/PerfDiag.java
+new file mode 100644
+index 0000000..2305df2
+--- /dev/null
++++ b/app/src/main/java/git/artdeell/skymodloader/PerfDiag.java
+@@ -0,0 +1,98 @@
++package git.artdeell.skymodloader;
++
++import android.content.Context;
++import android.content.Intent;
++import android.os.Build;
++import android.os.PowerManager;
++import android.os.SystemClock;
++import android.util.Log;
++
++import java.util.HashMap;
++import java.util.Map;
++
++public final class PerfDiag {
++    public static final String TAG = "CanvasPerf";
++    private static final Map<String, String> config = new HashMap<>();
++    private static boolean autoplay;
++    private static long thermalCalls;
++    private static long thermalLogAt;
++    private static int thermalLastReturned = Integer.MIN_VALUE;
++
++    private PerfDiag() {}
++
++    public static synchronized void capture(Intent intent) {
++        String raw = intent == null ? null : intent.getStringExtra("perfcfg");
++        if (raw == null) return;
++        config.clear();
++        for (String item : raw.split(",")) {
++            int eq = item.indexOf('=');
++            if (eq > 0) config.put(item.substring(0, eq).trim(), item.substring(eq + 1).trim());
++        }
++        autoplay = true;
++        Log.i(TAG, "config " + raw);
++    }
++
++    public static synchronized boolean takeAutoplay() {
++        boolean value = autoplay;
++        autoplay = false;
++        return value;
++    }
++
++    public static synchronized String get(String key, String fallback) {
++        String value = config.get(key);
++        return value == null ? fallback : value;
++    }
++
++    public static boolean overlayEnabled() {
++        return !get("overlay", "1").equals("0");
++    }
++
++    public static boolean cjkFont() {
++        return !get("cjk", "1").equals("0");
++    }
++
++    public static boolean liveThermal() {
++        return get("thermal", "frozen").equals("live");
++    }
++
++    public static void configureNative() {
++        String limit = get("limit", "off");
++        String prio = get("prio", "default");
++        String cpus = get("cpus", "all");
++        int limiter = limit.equals("pace30") ? 2 : limit.equals("after") ? 3 : limit.equals("afterfence") ? 4
++                : limit.equals("game") ? 5 : 1;
++        nativeConfigure(limiter, get("skip", "0").equals("1"),
++                get("latch", "0").equals("1"), !limit.equals("off"),
++                prio.equals("low") ? 1 : prio.equals("high") ? 2 : 0, intOf("depth", 24),
++                get("damage", "0").equals("1"), cpus.equals("little") ? 1 : cpus.equals("big") ? 2 : 0,
++                intOf("nice", Integer.MIN_VALUE), intOf("ptime", 0), intOf("lag", 0),
++                intOf("fallback", limiter == 5 ? 70 : 100), get("heavy", "0").equals("1"));
++    }
++
++    private static int intOf(String key, int fallback) {
++        try {
++            return Integer.parseInt(get(key, String.valueOf(fallback)));
++        } catch (NumberFormatException e) {
++            return fallback;
++        }
++    }
++
++    public static synchronized void thermalCall(int returned, Context context) {
++        thermalCalls++;
++        long now = SystemClock.uptimeMillis();
++        if (returned == thermalLastReturned && now - thermalLogAt < 5000) return;
++        int framework = -1;
++        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && context != null) {
++            PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
++            if (pm != null) framework = pm.getCurrentThermalStatus();
++        }
++        Log.i(TAG, "thermal calls=" + thermalCalls + " returned=" + returned + " framework=" + framework
++                + " mode=" + (liveThermal() ? "live" : "frozen"));
++        thermalLastReturned = returned;
++        thermalLogAt = now;
++    }
++
++    private static native void nativeConfigure(int limiter, boolean skip, boolean latch, boolean limitFps,
++                                               int prio, int depth, boolean damage, int cpus, int nice, int presentLead,
++                                               int lag, int fallback, boolean heavy);
++}
+diff --git a/app/src/main/java/git/artdeell/skymodloader/elfmod/ModManagerActivity.java b/app/src/main/java/git/artdeell/skymodloader/elfmod/ModManagerActivity.java
+index c2e377f..a03b36f 100644
+--- a/app/src/main/java/git/artdeell/skymodloader/elfmod/ModManagerActivity.java
++++ b/app/src/main/java/git/artdeell/skymodloader/elfmod/ModManagerActivity.java
+@@ -104,6 +104,7 @@ public class ModManagerActivity extends Activity implements LoadingListener, Mod
+         setButtonLongClickListeners();
+         initializeTabNavigation();
+         initializeInstanceManager();
++        git.artdeell.skymodloader.PerfDiag.capture(getIntent());
+     }
+ 
+     private TextView tvActiveInstanceName;
+@@ -462,6 +463,9 @@ public class ModManagerActivity extends Activity implements LoadingListener, Mod
+         super.onResume();
+         updateButtonTextColor();
+         updateInstanceUI();
++        if (git.artdeell.skymodloader.PerfDiag.takeAutoplay()) {
++            new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(this::launchGame, 1500);
++        }
+     }
+ 
+     public void setLogcatEnabled(boolean flag) {
+diff --git a/app/src/main/java/git/artdeell/skymodloader/updater/CanvasUpdaterActivity.java b/app/src/main/java/git/artdeell/skymodloader/updater/CanvasUpdaterActivity.java
+index 4649929..d8e7811 100644
+--- a/app/src/main/java/git/artdeell/skymodloader/updater/CanvasUpdaterActivity.java
++++ b/app/src/main/java/git/artdeell/skymodloader/updater/CanvasUpdaterActivity.java
+@@ -167,7 +167,7 @@ public class CanvasUpdaterActivity extends Activity implements ServiceConnection
+ 
+     private void tryInstallPackage() {
+         Intent androidInstallerIntent = new Intent(Intent.ACTION_INSTALL_PACKAGE);
+-        androidInstallerIntent.setData(FileProvider.getUriForFile(this, "git.artdeell.skymodloader.updater", new File(getCacheDir(), "update.apk")));
++        androidInstallerIntent.setData(FileProvider.getUriForFile(this, getPackageName() + ".updater", new File(getCacheDir(), "update.apk")));
+         androidInstallerIntent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+         startActivity(androidInstallerIntent);
+     }

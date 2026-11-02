@@ -1,0 +1,13 @@
+# libFuzzer dictionary for fuzz_decoders.cpp: values OtherAudio::Decide needs
+# to reach Swap (pass 24). Pointers are absolute in the harness's virtual image
+# at 0x7000000000 (little-endian); the stub is kReturnFalseStub
+# (OtherAudioSwap.h:11); a vtable address point is preceded by two zero words.
+image_base="\x00\x00\x00\x00\x70\x00\x00\x00"
+image_base_plus_page="\x00\x10\x00\x00\x70\x00\x00\x00"
+return_false_stub="\xfd\x7b\xbf\xa9\xfd\x03\x00\x91\xe0\x03\x1f\x2a\xfd\x7b\xc1\xa8\xc0\x03\x5f\xd6"
+stub_w0="\xfd\x7b\xbf\xa9"
+stub_w1="\xfd\x03\x00\x91"
+stub_w2="\xe0\x03\x1f\x2a"
+stub_w3="\xfd\x7b\xc1\xa8"
+stub_w4="\xc0\x03\x5f\xd6"
+vtable_header="\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"

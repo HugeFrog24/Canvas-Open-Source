@@ -1,0 +1,18 @@
+# Mouse Y-axis investigation (MOUSE.md): the sanitizer image plus a JDK, to
+# compile Canvas's real GameActivity mouse methods and stock Sky's (decompiled
+# by jadx from the decoded smali) against the same stub android.* classes.
+#
+#   docker build -t canvas-mouse-harness:local -f app/src/test/mouse/Dockerfile.mouse app/src/test/mouse
+FROM canvas-sanitizer-harness:local
+
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends openjdk-17-jdk-headless unzip curl ca-certificates patch \
+ && rm -rf /var/lib/apt/lists/*
+
+# jadx from the official skylot/jadx releases, pinned; its SHA-256 is printed
+# at build time for the record in MOUSE.md.
+ARG JADX_VERSION=1.5.0
+RUN curl -fsSL -o /tmp/jadx.zip https://github.com/skylot/jadx/releases/download/v${JADX_VERSION}/jadx-${JADX_VERSION}.zip \
+ && sha256sum /tmp/jadx.zip \
+ && mkdir -p /opt/jadx && unzip -q /tmp/jadx.zip -d /opt/jadx && rm /tmp/jadx.zip
+ENV PATH=/opt/jadx/bin:$PATH
